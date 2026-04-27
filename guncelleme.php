@@ -1,4 +1,0 @@
-{
-	"version": "1.1.2",
-	"url": "https://github.com/dle-hub/dle-native-forum/releases/download/v1.1.2/dle-native-forum-ultimate-core-v112.zip"
-}
