@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <dleplugin>
-	<name>DLE Native Forum (Ultimate Core v1.1.1)</name>
+	<name>DLE Native Forum (Ultimate Core v1.1.2)</name>
 	<description>Dlehub Özel - Hatasız Backend, OOP, AJAX, SEO ve Admin Panel (Bugfix)</description>
 	<icon>public/adminpanel/images/forum.png</icon>
-	<version>1.1.1</version>
+	<version>1.1.2</version>
 	<dleversion>18.0</dleversion>
 	<versioncompare>greater</versioncompare>
 	<upgradeurl></upgradeurl>
