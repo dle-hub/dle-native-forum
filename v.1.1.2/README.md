@@ -58,14 +58,18 @@ Bu sürüm, eklentiyi "kusursuzluk" seviyesine taşımak için devasa altyapı i
 
 ## 🚀 Kurulum
 
-Eklentiyi kurmak DLE 18 mimarisi sayesinde saniyeler sürer:
+Eklentide dil dosyaları ve şablonlarda değişiklikler olduğu için lütfen aşağıdaki adımları sırasıyla uygulayın:
 
-1. Bu repodaki `dle-native-forum-ultimate-core-v112.xml` dosyasını indirin.
-2. DLE Yönetim Panelinize giriş yapın.
-3. **Eklentiler (Plugins) > Eklenti Yükle** kısmına gidin.
-4. İndirdiğiniz `.xml` dosyasını yükleyin ve kurulumu onaylayın.
-5. Kurulum bittikten sonra DLE Yönetim Panelinden **Tüm Önbelleği Temizle (Clear Cache)** işlemini mutlaka yapın.
-6. İşlem tamam! Sitenizin sonuna `/forum/` ekleyerek forumunuza ulaşabilirsiniz.
+1. Repodaki şu klasörleri sitenizin ana dizinine (root) yükleyin (Mevcut dosyaların üzerine yazdırın):
+   - `language/`
+   - `public/adminpanel/images/`
+   - `templates/Default/forum/`
+2. Repodaki `dle-native-forum-ultimate-core-v112.xml` dosyasını indirin.
+3. DLE Yönetim Panelinize giriş yapın.
+4. **Eklentiler (Plugins) > Eklenti Yükle** kısmına gidin.
+5. İndirdiğiniz `.xml` dosyasını yükleyin ve kurulumu onaylayın.
+6. Kurulum bittikten sonra DLE Yönetim Panelinden **Tüm Önbelleği Temizle (Clear Cache)** işlemini mutlaka yapın.
+7. İşlem tamam! Sitenizin sonuna `/forum/` ekleyerek forumunuza ulaşabilirsiniz.
 
 > **Not:** Son Konular bloğunu sitenizin herhangi bir yerinde (Örn: `main.tpl`) göstermek için şu kodu kullanabilirsiniz:
 > `{include file="engine/modules/forum_block.php?limit=5"}`
