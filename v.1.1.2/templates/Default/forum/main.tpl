@@ -21,9 +21,7 @@
         
         <div class="df-main-header-actions">
             
-            <form action="{SITEURL}index.php" method="get" class="df-search-form">
-                <input type="hidden" name="do" value="forum">
-                <input type="hidden" name="action" value="search">
+            <form action="{SITEURL}forum/search/" method="get" class="df-search-form">
                 <input type="text" name="q" placeholder="Forumda ara..." class="df-search-input">
                 <button type="submit" class="df-search-btn">
                     <i class="fa fa-search"></i>

@@ -5,7 +5,7 @@
     <nav class="df-breadcrumb">
         <a href="{SITEURL}" class="df-breadcrumb-link">Ana Sayfa</a>
         <i class="fa fa-chevron-right df-breadcrumb-sep"></i>
-        <a href="{SITEURL}index.php?do=forum" class="df-breadcrumb-link">Forum</a>
+        <a href="{SITEURL}forum/" class="df-breadcrumb-link">Forum</a>
         <i class="fa fa-chevron-right df-breadcrumb-sep"></i>
         <span class="df-breadcrumb-current">{topic_title}</span>
     </nav>

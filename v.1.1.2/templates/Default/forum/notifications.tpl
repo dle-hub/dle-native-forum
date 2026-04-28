@@ -6,7 +6,7 @@
     <nav class="df-breadcrumb">
         <a href="{SITEURL}" class="df-breadcrumb-link">Ana Sayfa</a>
         <i class="fa fa-chevron-right df-breadcrumb-sep"></i>
-        <a href="{SITEURL}index.php?do=forum" class="df-breadcrumb-link">Forum</a>
+        <a href="{SITEURL}forum/" class="df-breadcrumb-link">Forum</a>
         <i class="fa fa-chevron-right df-breadcrumb-sep"></i>
         <span class="df-breadcrumb-current">Bildirimler</span>
     </nav>
@@ -18,7 +18,7 @@
                 <i class="fa fa-bell"></i> Bildirimler
             </h1>
             <div class="df-header-actions">
-                <a href="{SITEURL}index.php?do=forum" class="df-btn-back">
+                <a href="{SITEURL}forum/" class="df-btn-back">
                     <i class="fa fa-arrow-left"></i> Foruma Dön
                 </a>
             </div>

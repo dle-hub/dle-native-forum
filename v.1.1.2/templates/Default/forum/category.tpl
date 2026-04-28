@@ -5,7 +5,7 @@
     <nav class="df-breadcrumb">
         <a href="{SITEURL}" class="df-breadcrumb-link">Ana Sayfa</a>
         <i class="fa fa-chevron-right df-breadcrumb-sep"></i>
-        <a href="{SITEURL}index.php?do=forum" class="df-breadcrumb-link">Forum</a>
+        <a href="{SITEURL}forum/" class="df-breadcrumb-link">Forum</a>
         <i class="fa fa-chevron-right df-breadcrumb-sep"></i>
         <span class="df-breadcrumb-current">{cat_name}</span>
     </nav>
@@ -22,9 +22,7 @@
         </div>
         <div class="df-hero-actions">
             {new_topic_btn}
-            <form action="{SITEURL}index.php" method="get" class="df-search-form">
-                <input type="hidden" name="do" value="forum">
-                <input type="hidden" name="action" value="search">
+            <form action="{SITEURL}forum/search/" method="get" class="df-search-form">
                 <input type="text" name="q" placeholder="Forumda ara..." class="df-search-input">
                 <button type="submit" class="df-search-btn"><i class="fa fa-search"></i></button>
             </form>

@@ -16,7 +16,7 @@
 
 /* ---- GENEL ---- */
 .df-page-wrap { display: flex; flex-direction: column; gap: 20px; width: 100%; }
-a { color: var(--df-accent); text-decoration: none; transition: color .15s; }
+a { color: var(--df-accent); text-decoration: none;  }
 a:hover { color: var(--df-accent-hover); }
 
 /* ---- HEADER (MYBB STYLE BOX) ---- */
@@ -45,18 +45,18 @@ a:hover { color: var(--df-accent-hover); }
 .df-btn-new-topic {
     display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
     background: var(--df-accent); color: #000; font-size: 11px; font-weight: 800;
-    text-transform: uppercase; border-radius: 4px; text-decoration: none; box-shadow: 0 2px 6px rgba(245,158,11,.2); transition: all .2s;
+    text-transform: uppercase; border-radius: 4px; text-decoration: none; box-shadow: 0 2px 6px rgba(245,158,11,.2); 
 }
-.df-btn-new-topic:hover { background: var(--df-accent-hover); transform: translateY(-1px); text-decoration: none; }
+.df-btn-new-topic:hover { background: var(--df-accent-hover);  text-decoration: none; }
 
 /* ---- ARAMA ---- */
 .df-search-form { position: relative; }
 .df-search-input {
     background: #fff; border: 1px solid var(--df-border); border-radius: 4px; /* Köşeli */
-    padding: 8px 14px; font-size: 13px; color: var(--df-text); width: 180px; transition: all .2s;
+    padding: 8px 14px; font-size: 13px; color: var(--df-text); width: 180px; 
 }
 .df-search-input:focus { width: 220px; border-color: var(--df-accent); outline: none; box-shadow: 0 0 0 2px rgba(245,158,11,.1); }
-.df-search-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--df-text-muted); background: none; border: none; cursor: pointer; }
+.df-search-btn { position: absolute; right: 12px; top: 50%;  color: var(--df-text-muted); background: none; border: none; cursor: pointer; }
 
 /* ---- KATEGORİ BLOĞU ---- */
 .df-category-block {
@@ -119,7 +119,7 @@ a:hover { color: var(--df-accent-hover); }
     align-items: center;
     padding: 10px 16px;
     border-bottom: 1px solid var(--df-border);
-    transition: background .1s ease-in-out;
+    
     min-height: 52px;
 }
 .df-forum-row:last-child { border-bottom: none; }
@@ -159,23 +159,32 @@ a:hover { color: var(--df-accent-hover); }
 }
 .df-stat-num small { font-size: 9px; font-weight: 600; color: var(--df-text-muted); text-transform: uppercase; letter-spacing: 0.03em; margin-top: 1px; }
 
-/* Son Mesaj Sütunu */
+/* Son Mesaj Sütunu (Premium Yatay Tasarım) */
 .df-col-last { 
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 0 10px; overflow: hidden; text-align: center;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 12px;
+    padding: 0 15px;
+    overflow: hidden;
 }
-@media (max-width: 767px) { .df-col-last { display: none; } }
+@media (max-width: 767px) { .df-col-last { display: none !important; } }
+
+.df-last-post-avatar {
+    width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--df-border); flex-shrink: 0;
+}
 .df-last-post-wrap { 
-    display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; 
+    display: flex; flex-direction: column; min-width: 0; text-align: left !important; align-items: flex-start !important; gap: 2px;
 }
 .df-last-title {
-    font-size: 13px; font-weight: 600; color: var(--df-text);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-size: 13px; font-weight: 700; color: var(--df-text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;
+    line-height: 1.3;
 }
 .df-last-title:hover { color: var(--df-accent); }
-.df-last-meta { font-size: 11px; color: var(--df-text-muted); display: flex; gap: 4px; align-items: center; }
-.df-last-meta .df-sep { opacity: 0.4; }
-.df-no-post { font-size: 11px; color: #cbd5e1; font-style: italic; }
+.df-last-meta { font-size: 11px; color: var(--df-text-muted); white-space: nowrap; }
+.df-no-post { font-size: 11px; color: #cbd5e1; font-style: italic; width: 100%; text-align: center; }
 
 /* ---- İSTATİSTİK KUTUSU ---- */
 .df-stats-box { background: var(--df-bg); border: 1px solid var(--df-border); border-radius: var(--df-radius); overflow: hidden; margin-top: 8px; }
@@ -219,7 +228,7 @@ a:hover { color: var(--df-accent-hover); }
     align-items: center;
     padding: 10px 16px;
     border-bottom: 1px solid var(--df-border);
-    transition: background .15s;
+    
 }
 .df-topic-row:last-child { border-bottom: none; }
 .df-topic-row:hover { background: #fafbfc; }
@@ -279,6 +288,11 @@ a:hover { color: var(--df-accent-hover); }
     padding: 12px 20px;
     background: #f4f5f7;
     border-bottom: 1px solid var(--df-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 .df-card-title {
     font-size: 15px;
@@ -302,7 +316,7 @@ a:hover { color: var(--df-accent-hover); }
     font-size: 14px;
     font-weight: 400;
     outline: none;
-    transition: border-color .2s, box-shadow .2s;
+    
     box-sizing: border-box;
 }
 .df-input:focus {
@@ -326,7 +340,7 @@ a:hover { color: var(--df-accent-hover); }
     font-size: 12px; font-weight: 700; text-transform: uppercase;
     padding: 10px 24px; border-radius: 4px;
     border: none; cursor: pointer; text-decoration: none;
-    transition: background .15s;
+    
 }
 .df-btn-submit:hover { background: var(--df-accent-hover); }
 .df-btn-submit:active { background: #b45309; }
@@ -335,7 +349,7 @@ a:hover { color: var(--df-accent-hover); }
 .df-btn-back {
     font-size: 11px; font-weight: 700; color: #4a5568;
     text-transform: uppercase; display: flex; align-items: center; gap: 6px;
-    padding: 10px 16px; border-radius: 4px; transition: all .15s;
+    padding: 10px 16px; border-radius: 4px; 
     background: #edf2f7; border: 1px solid #e2e8f0; text-decoration: none;
 }
 .df-btn-back:hover { background: #e2e8f0; color: #1a202c; text-decoration: none; }
@@ -614,7 +628,7 @@ a:hover { color: var(--df-accent-hover); }
 .df-breadcrumb-link {
     color: #475569;
     text-decoration: none;
-    transition: color 0.15s;
+    
 }
 .df-breadcrumb-link:hover {
     color: var(--df-accent);
@@ -637,110 +651,74 @@ a:hover { color: var(--df-accent-hover); }
 }
 
 /* ---- PM (ÖZEL MESAJ) SAYFASI ---- */
-
-/* Header'daki Başlık ve Buton Hizalaması */
-.df-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between; /* Başlık solda, butonlar sağda */
-    flex-wrap: wrap; /* Mobilde alt alta düşsün */
-    gap: 10px;
-}
-
-/* Buton Grubu */
-.df-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* PM Liste Tablosu */
-.df-pm-list {
-    display: flex;
-    flex-direction: column;
-}
-.df-pm-row {
-    display: grid;
-    grid-template-columns: 40px 1fr 80px 120px; /* Avatar - İçerik - Gönderen - Tarih */
-    align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--df-border);
-    transition: background .15s;
-    gap: 16px;
-}
-.df-pm-row:last-child { border-bottom: none; }
-.df-pm-row:hover { background: #fafbfc; }
-.df-pm-row.unread { background: rgba(245,158,11,.05); font-weight: 700; } /* Okunmamış mesaj vurgusu */
-
-/* Avatar */
-.df-pm-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-
-/* İçerik */
-.df-pm-content { overflow: hidden; }
-.df-pm-title { display: block; font-size: 14px; font-weight: 700; color: var(--df-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.df-pm-title:hover { color: var(--df-accent); }
-.df-pm-snippet { font-size: 12px; color: var(--df-text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-/* Tarih ve Gönderen */
-.df-pm-meta { font-size: 11px; color: var(--df-text-muted); text-align: right; }
-
-/* Mobil Uyum */
-@media (max-width: 767px) {
-    .df-card-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .df-pm-row {
-        grid-template-columns: 30px 1fr; /* Sadece Avatar ve Başlık */
-        gap: 10px;
-    }
-    .df-pm-meta { display: none; } /* Mobilde tarih/gönderen gizlensin */
-}
-/* ---- PM OKUMA (READ) ---- */
-.df-pm-read-view {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.df-pm-read-header {
+.df-pm-controls {
+    margin-bottom: 20px;
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    flex-wrap: wrap;
+    align-items: center;
+    background: #f8fafc;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+}
+
+.df-pm-list { display: flex; flex-direction: column; gap: 8px; }
+.df-pm-row {
+    display: grid;
+    grid-template-columns: 30px 45px 1fr 140px;
+    align-items: center;
+    padding: 14px 16px;
+    background: #fff;
+    border: 1px solid #edf2f7;
+    border-radius: 12px;
+    
     gap: 12px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--df-border);
 }
-.df-pm-read-title {
-    font-size: 18px;
-    font-weight: 800;
-    margin: 0;
-    color: var(--df-text);
+.df-pm-row:hover { border-color: var(--df-accent);  box-shadow: 0 4px 12px rgba(0,0,0,.03); }
+.df-pm-row.unread { background: rgba(245,158,11,.03); border-color: rgba(245,158,11,.2); }
+
+.df-pm-select { display: flex; align-items: center; justify-content: center; }
+.df-pm-avatar-wrap { display: flex; align-items: center; justify-content: center; }
+.df-pm-avatar { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,.05); }
+
+.df-pm-content { overflow: hidden; padding-left: 4px; }
+.df-pm-title { display: block; font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 2px; }
+.df-pm-snippet { font-size: 12px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.df-pm-meta { font-size: 11px; color: #94a3b8; text-align: right; line-height: 1.5; }
+.df-pm-meta strong { color: #475569; font-weight: 700; font-size: 12px; }
+
+/* Okuma Görünümü (Premium Post Style) */
+.df-pm-read-view { display: flex; flex-direction: column; gap: 20px; }
+.df-pm-message-item { border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+.df-pm-message-item .df-post-user { background: #f8fafc; width: 120px; min-width: 120px; padding: 20px 10px; border-right: 1px solid #e2e8f0; }
+.df-pm-message-item .df-avatar { width: 64px; height: 64px; border-radius: 12px; margin-bottom: 10px; }
+.df-pm-message-item .df-post-username { font-size: 13px; font-weight: 800; color: #1e293b; }
+.df-pm-message-item .df-post-header { background: #fff; border-bottom: 1px solid #f1f5f9; padding: 12px 20px; }
+.df-pm-message-item .df-post-content { padding: 20px; color: #334155; font-size: 14px; line-height: 1.7; }
+
+/* Custom Checkbox Styling */
+.df-checkbox-custom {
+    appearance: none;
+    width: 18px; height: 18px;
+    border: 2px solid #cbd5e1;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    position: relative;
+    
 }
-.df-pm-read-meta {
-    font-size: 12px;
-    color: var(--df-text-muted);
-    margin-top: 4px;
+.df-checkbox-custom:checked { background: var(--df-accent); border-color: var(--df-accent); }
+.df-checkbox-custom:checked::after {
+    content: '\f00c'; font-family: 'FontAwesome'; font-size: 10px; color: #000;
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
 }
-.df-pm-messages {
-    display: flex;
-    flex-direction: column;
-    gap: 0; /* Mesajlar birleşik dursun */
-}
-/* Okuma modunda postlar arası boşluğu azalt */
-.df-pm-messages .df-post {
-    border-radius: 0;
-    margin-bottom: 0;
-    border-top: none;
-}
-.df-pm-messages .df-post:first-child {
-    border-radius: var(--df-radius) var(--df-radius) 0 0;
-    border-top: 1px solid var(--df-border);
-}
-.df-pm-messages .df-post:last-child {
-    border-radius: 0 0 var(--df-radius) var(--df-radius);
-    margin-bottom: 0;
+
+@media (max-width: 767px) {
+    .df-pm-row { grid-template-columns: 30px 40px 1fr; padding: 12px; }
+    .df-pm-meta { display: none; }
+    .df-pm-message-item .df-post-user { width: 100%; border-right: none; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; padding: 12px; }
+    .df-pm-message-item .df-avatar { width: 44px; height: 44px; margin-bottom: 0; }
 }
 
 /* Sidebar PM Butonu */
@@ -757,7 +735,7 @@ a:hover { color: var(--df-accent-hover); }
     text-align: center;
     text-transform: uppercase;
     text-decoration: none;
-    transition: all .15s;
+    
 }
 .df-btn-pm:hover {
     background: var(--df-accent);
@@ -959,7 +937,7 @@ a:hover { color: var(--df-accent-hover); }
     padding: 12px;
     background: var(--df-bg);
     border-bottom: 1px solid var(--df-border);
-    transition: all 0.2s ease;
+    
 }
 
 .df-side-item:last-child {
@@ -1046,9 +1024,9 @@ a:hover { color: var(--df-accent-hover); }
     overflow: hidden;
     color: #fff;
     box-shadow: 0 1px 3px rgba(0,0,0,.08);
-    transition: transform .15s;
+    
 }
-.df-pill:hover { transform: translateY(-1px); }
+.df-pill:hover {  }
 .df-pill-body {
     flex: 1;
     display: flex;
@@ -1152,7 +1130,7 @@ a:hover { color: var(--df-accent-hover); }
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    transition: color .15s;
+    
 }
 .df-footer-links a:hover {
     color: var(--df-accent);

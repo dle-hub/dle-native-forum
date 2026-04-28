@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <dleplugin>
-	<name>DLE Native Forum (Ultimate Core v1.1.1)</name>
+	<name>DLE Native Forum (Ultimate Core v1.1.2)</name>
 	<description>Dlehub Özel - Hatasız Backend, OOP, AJAX, SEO ve Admin Panel (Bugfix)</description>
 	<icon>public/adminpanel/images/forum.png</icon>
-	<version>1.1.1</version>
+	<version>1.1.2</version>
 	<dleversion>18.0</dleversion>
 	<versioncompare>greater</versioncompare>
 	<upgradeurl></upgradeurl>
@@ -541,11 +541,140 @@ ALTER TABLE `{prefix}_users` DROP COLUMN IF EXISTS `forum_post_count`;
 DELETE FROM `{prefix}_admin_sections` 
 WHERE name='forum';
 DROP TABLE IF EXISTS `{prefix}_forum_flood`;]]></mysqldelete>
-	<phpinstall><![CDATA[]]></phpinstall>
-	<phpupgrade><![CDATA[]]></phpupgrade>
-	<phpenable><![CDATA[]]></phpenable>
-	<phpdisable><![CDATA[]]></phpdisable>
-	<phpdelete><![CDATA[]]></phpdelete>
+	<phpinstall><![CDATA[if (class_exists('DLEUrl')) {
+    $rules = ['forum_main','forum_cat','forum_topic','forum_user','forum_new_topic','forum_search','forum_notifications','forum_pm','forum_pm_read','forum_ajax'];
+    
+    // Eski kuralları silelim
+    foreach($rules as $r) {
+        DLEUrl::DeleteRule('custom.' . $r);
+    }
+
+    // 1. ÖNCE STATİK (SABİT) KURALLAR EKLENİR
+    DLEUrl::AddRule('forum_main',          '/forum/',                                   'index.php?do=forum');
+    DLEUrl::AddRule('forum_new_topic',     '/forum/new-topic/',                         'index.php?do=forum&action=new_topic');
+    DLEUrl::AddRule('forum_search',        '/forum/search/',                            'index.php?do=forum&action=search');
+    DLEUrl::AddRule('forum_notifications', '/forum/notifications/',                     'index.php?do=forum&action=notifications');
+    DLEUrl::AddRule('forum_pm',            '/forum/pm/',                                'index.php?do=forum&action=pm');
+    DLEUrl::AddRule('forum_ajax',          '/forum/ajax/',                              'index.php?do=forum&action=ajax');
+    
+    // 2. SONRA YARI DEĞİŞKEN KURALLAR
+    DLEUrl::AddRule('forum_user',          '/forum/user/{user}/',                       'index.php?do=forum&action=user_posts&user={user}');
+    DLEUrl::AddRule('forum_pm_read',       '/forum/pm/read/{newsid}/',                  'index.php?do=forum&action=pm&sub=read&id={newsid}');
+    DLEUrl::AddRule('forum_topic',         '/forum/{category}/{newsid}-{news_name}.html', 'index.php?do=forum&action=topic&id={newsid}');
+    
+    // 3. EN GENEL KURAL EN SONA YAZILIR (Shadowing hatasını çözen adım)
+    DLEUrl::AddRule('forum_cat',           '/forum/{category}/',                        'index.php?do=forum&action=category&cat={category}');
+    
+    // FastRoute motorunun kurallarımızı en önce okuması için DLE array'ini manipüle ediyoruz
+    if (is_array(DLEUrl::$rules)) {
+        $custom_rules = [];
+        $other_rules = [];
+        
+        foreach(DLEUrl::$rules as $k => $v) {
+            if (strpos($k, 'custom.forum_') === 0) {
+                $custom_rules[$k] = $v;
+            } else {
+                $other_rules[$k] = $v;
+            }
+        }
+        
+        // Forum kurallarını DLE kurallarının en başına alıp kaydediyoruz
+        DLEUrl::$rules = array_merge($custom_rules, $other_rules);
+        DLEUrl::SaveRules(DLEUrl::$rules);
+    }
+}]]></phpinstall>
+	<phpupgrade><![CDATA[if (class_exists('DLEUrl')) {
+    $rules = ['forum_main','forum_cat','forum_topic','forum_user','forum_new_topic','forum_search','forum_notifications','forum_pm','forum_pm_read','forum_ajax'];
+    
+    // Eski kuralları silelim
+    foreach($rules as $r) {
+        DLEUrl::DeleteRule('custom.' . $r);
+    }
+
+    // 1. ÖNCE STATİK (SABİT) KURALLAR EKLENİR
+    DLEUrl::AddRule('forum_main',          '/forum/',                                   'index.php?do=forum');
+    DLEUrl::AddRule('forum_new_topic',     '/forum/new-topic/',                         'index.php?do=forum&action=new_topic');
+    DLEUrl::AddRule('forum_search',        '/forum/search/',                            'index.php?do=forum&action=search');
+    DLEUrl::AddRule('forum_notifications', '/forum/notifications/',                     'index.php?do=forum&action=notifications');
+    DLEUrl::AddRule('forum_pm',            '/forum/pm/',                                'index.php?do=forum&action=pm');
+    DLEUrl::AddRule('forum_ajax',          '/forum/ajax/',                              'index.php?do=forum&action=ajax');
+    
+    // 2. SONRA YARI DEĞİŞKEN KURALLAR
+    DLEUrl::AddRule('forum_user',          '/forum/user/{user}/',                       'index.php?do=forum&action=user_posts&user={user}');
+    DLEUrl::AddRule('forum_pm_read',       '/forum/pm/read/{newsid}/',                  'index.php?do=forum&action=pm&sub=read&id={newsid}');
+    DLEUrl::AddRule('forum_topic',         '/forum/{category}/{newsid}-{news_name}.html', 'index.php?do=forum&action=topic&id={newsid}');
+    
+    // 3. EN GENEL KURAL EN SONA YAZILIR (Shadowing hatasını çözen adım)
+    DLEUrl::AddRule('forum_cat',           '/forum/{category}/',                        'index.php?do=forum&action=category&cat={category}');
+    
+    // FastRoute motorunun kurallarımızı en önce okuması için DLE array'ini manipüle ediyoruz
+    if (is_array(DLEUrl::$rules)) {
+        $custom_rules = [];
+        $other_rules = [];
+        
+        foreach(DLEUrl::$rules as $k => $v) {
+            if (strpos($k, 'custom.forum_') === 0) {
+                $custom_rules[$k] = $v;
+            } else {
+                $other_rules[$k] = $v;
+            }
+        }
+        
+        // Forum kurallarını DLE kurallarının en başına alıp kaydediyoruz
+        DLEUrl::$rules = array_merge($custom_rules, $other_rules);
+        DLEUrl::SaveRules(DLEUrl::$rules);
+    }
+}]]></phpupgrade>
+	<phpenable><![CDATA[if (class_exists('DLEUrl')) {
+    $rules = ['forum_main','forum_cat','forum_topic','forum_user','forum_new_topic','forum_search','forum_notifications','forum_pm','forum_pm_read','forum_ajax'];
+    
+    // Eski kuralları silelim
+    foreach($rules as $r) {
+        DLEUrl::DeleteRule('custom.' . $r);
+    }
+
+    // 1. ÖNCE STATİK (SABİT) KURALLAR EKLENİR
+    DLEUrl::AddRule('forum_main',          '/forum/',                                   'index.php?do=forum');
+    DLEUrl::AddRule('forum_new_topic',     '/forum/new-topic/',                         'index.php?do=forum&action=new_topic');
+    DLEUrl::AddRule('forum_search',        '/forum/search/',                            'index.php?do=forum&action=search');
+    DLEUrl::AddRule('forum_notifications', '/forum/notifications/',                     'index.php?do=forum&action=notifications');
+    DLEUrl::AddRule('forum_pm',            '/forum/pm/',                                'index.php?do=forum&action=pm');
+    DLEUrl::AddRule('forum_ajax',          '/forum/ajax/',                              'index.php?do=forum&action=ajax');
+    
+    // 2. SONRA YARI DEĞİŞKEN KURALLAR
+    DLEUrl::AddRule('forum_user',          '/forum/user/{user}/',                       'index.php?do=forum&action=user_posts&user={user}');
+    DLEUrl::AddRule('forum_pm_read',       '/forum/pm/read/{newsid}/',                  'index.php?do=forum&action=pm&sub=read&id={newsid}');
+    DLEUrl::AddRule('forum_topic',         '/forum/{category}/{newsid}-{news_name}.html', 'index.php?do=forum&action=topic&id={newsid}');
+    
+    // 3. EN GENEL KURAL EN SONA YAZILIR (Shadowing hatasını çözen adım)
+    DLEUrl::AddRule('forum_cat',           '/forum/{category}/',                        'index.php?do=forum&action=category&cat={category}');
+    
+    // FastRoute motorunun kurallarımızı en önce okuması için DLE array'ini manipüle ediyoruz
+    if (is_array(DLEUrl::$rules)) {
+        $custom_rules = [];
+        $other_rules = [];
+        
+        foreach(DLEUrl::$rules as $k => $v) {
+            if (strpos($k, 'custom.forum_') === 0) {
+                $custom_rules[$k] = $v;
+            } else {
+                $other_rules[$k] = $v;
+            }
+        }
+        
+        // Forum kurallarını DLE kurallarının en başına alıp kaydediyoruz
+        DLEUrl::$rules = array_merge($custom_rules, $other_rules);
+        DLEUrl::SaveRules(DLEUrl::$rules);
+    }
+}]]></phpenable>
+	<phpdisable><![CDATA[if (class_exists('DLEUrl')) {
+    $rules = ['forum_main','forum_cat','forum_topic','forum_user','forum_new_topic','forum_search','forum_notifications','forum_pm','forum_pm_read','forum_ajax'];
+    foreach($rules as $r) DLEUrl::DeleteRule('custom.' . $r);
+}]]></phpdisable>
+	<phpdelete><![CDATA[if (class_exists('DLEUrl')) {
+    $rules = ['forum_main','forum_cat','forum_topic','forum_user','forum_new_topic','forum_search','forum_notifications','forum_pm','forum_pm_read','forum_ajax'];
+    foreach($rules as $r) DLEUrl::DeleteRule('custom.' . $r);
+}]]></phpdelete>
 	<notice><![CDATA[]]></notice>
 	<file name="engine/engine.php">
 		<operation action="replace">
@@ -601,20 +730,23 @@ if(isset($_POST['submit_pm']) && hash_equals((string)$csrf, (string)($_POST['use
     $text    = $db->safesql(trim($_POST['comments'])); // DLE editörü 'comments' name ile gönderir
     
     $to_user = $db->super_query("SELECT user_id FROM " . USERPREFIX . "_users WHERE name='{$name}'");
+    $conv_id = isset($_POST['conv_id']) ? intval($_POST['conv_id']) : 0;
     
     if(!$to_user) {
         $pm_error = fl('forum_err_pm_user');
         $sub_action = 'compose'; 
     } else {
-        // Conversation oluştur
-        $db->query("INSERT INTO " . USERPREFIX . "_conversations (subject, sender_id, recipient_id, created_at, updated_at) VALUES ('{$subject}', '{$uid}', '{$to_user['user_id']}', '{$time}', '{$time}')");
-        $conv_id = $db->insert_id();
-        
-        // Kullanıcıları ekle
-        $db->query("INSERT INTO " . USERPREFIX . "_conversation_users (conversation_id, user_id) VALUES ('{$conv_id}', '{$uid}'), ('{$conv_id}', '{$to_user['user_id']}')");
-        
-        // Mesajı ekle
-        $db->query("INSERT INTO " . USERPREFIX . "_conversations_messages (conversation_id, sender_id, content, created_at) VALUES ('{$conv_id}', '{$uid}', '{$text}', '{$time}')");
+        if($conv_id > 0) {
+            // Mevcut konuşmaya ekle
+            $db->query("INSERT INTO " . USERPREFIX . "_conversations_messages (conversation_id, sender_id, content, created_at) VALUES ('{$conv_id}', '{$uid}', '{$text}', '{$time}')");
+            $db->query("UPDATE " . USERPREFIX . "_conversations SET updated_at='{$time}' WHERE id='{$conv_id}'");
+        } else {
+            // Yeni konuşma oluştur
+            $db->query("INSERT INTO " . USERPREFIX . "_conversations (subject, sender_id, recipient_id, created_at, updated_at) VALUES ('{$subject}', '{$uid}', '{$to_user['user_id']}', '{$time}', '{$time}')");
+            $conv_id = $db->insert_id();
+            $db->query("INSERT INTO " . USERPREFIX . "_conversation_users (conversation_id, user_id) VALUES ('{$conv_id}', '{$uid}'), ('{$conv_id}', '{$to_user['user_id']}')");
+            $db->query("INSERT INTO " . USERPREFIX . "_conversations_messages (conversation_id, sender_id, content, created_at) VALUES ('{$conv_id}', '{$uid}', '{$text}', '{$time}')");
+        }
         
         // Sayaç güncelle
         $db->query("UPDATE " . USERPREFIX . "_users SET pm_all=pm_all+1 WHERE user_id IN ('{$uid}', '{$to_user['user_id']}')");
@@ -637,7 +769,24 @@ if(isset($_POST['delete_pm']) && hash_equals((string)$csrf, (string)($_POST['use
     
     $db->query("UPDATE " . USERPREFIX . "_users SET pm_all=GREATEST(0, pm_all-1) WHERE user_id='{$uid}'");
     
-    header("Location: " . $config['http_home_url'] . "index.php?do=forum&action=pm"); exit;
+    header("Location: " . forum_url('forum_pm')); exit;
+}
+
+// 3. Çoklu Mesaj Silme
+if(isset($_POST['delete_selected_pms']) && hash_equals((string)$csrf, (string)($_POST['user_hash'] ?? ''))) {
+    if(!empty($_POST['selected_pms']) && is_array($_POST['selected_pms'])) {
+        foreach($_POST['selected_pms'] as $pmid) {
+            $pmid = intval($pmid);
+            $db->query("DELETE FROM " . USERPREFIX . "_conversation_users WHERE conversation_id='{$pmid}' AND user_id='{$uid}'");
+            $count = $db->super_query("SELECT COUNT(*) as c FROM " . USERPREFIX . "_conversation_users WHERE conversation_id='{$pmid}'");
+            if(!$count['c']) {
+                $db->query("DELETE FROM " . USERPREFIX . "_conversations WHERE id='{$pmid}'");
+                $db->query("DELETE FROM " . USERPREFIX . "_conversations_messages WHERE conversation_id='{$pmid}'");
+            }
+            $db->query("UPDATE " . USERPREFIX . "_users SET pm_all=GREATEST(0, pm_all-1) WHERE user_id='{$uid}'");
+        }
+    }
+    header("Location: " . forum_url('forum_pm')); exit;
 }
 
 // --- TEMPLATE YÜKLEME ---
@@ -672,6 +821,7 @@ if($sub_action == 'compose') {
     $tpl->set('{editor}', $wysiwyg);
     $tpl->set('{recipient}', isset($_GET['to']) ? htmlspecialchars(urldecode($_GET['to']), ENT_QUOTES, 'UTF-8') : '');
     $tpl->set('{subject}', isset($_GET['subject']) ? htmlspecialchars(urldecode($_GET['subject']), ENT_QUOTES, 'UTF-8') : '');
+    $tpl->set('{conv_id}', isset($_GET['conv_id']) ? intval($_GET['conv_id']) : 0);
     
     $alert = '';
     if(!empty($pm_error)) $alert = '<div class="df-alert df-alert-error">'.$pm_error.'</div>';
@@ -704,7 +854,7 @@ elseif($sub_action == 'read' && isset($_GET['id'])) {
         $other_user = ($row['sender_id'] == $uid) ? $row['recipient_name'] : $row['sender_name'];
         $tpl->set('{pm_from}', $other_user);
         
-        $reply_link = "index.php?do=forum&action=pm&sub=compose&to=".urlencode($other_user)."&subject=Re: ".urlencode($s_title);
+        $reply_link = forum_fix_url(forum_url('forum_pm'), 'sub=compose&to=' . urlencode($other_user) . '&subject=Re: ' . urlencode($s_title) . '&conv_id=' . $pmid);
         $tpl->set('{reply_link}', $reply_link);
         $tpl->set('{pm_id}', $pmid);
         
@@ -716,29 +866,34 @@ elseif($sub_action == 'read' && isset($_GET['id'])) {
         );
         
         $messages_list = '';
-        include_once(DLEPlugins::Check(ENGINE_DIR . '/classes/parse.class.php'));
         $parse = new ParseFilter();
         $parse->safe_mode = true;
         $parse->edit_mode = false;
         $parse->wysiwyg = false;
 
         while($m = $db->get_row($msgs)) {
-            // XSS: allow_html her zaman false — PM içeriğinde ham HTML'e izin verilmez
             $m_text = $parse->decodeBBCodes(stripslashes($m['content']), true, false);
             $m_date = date("d.m.Y H:i", $m['created_at']);
             $m_usr  = htmlspecialchars($m['name']);
-            $avatar = $m['foto'] ? rtrim($config['http_home_url'], '/') . '/uploads/fotos/' . $m['foto'] : rtrim($config['http_home_url'], '/') . '/templates/' . $config['skin'] . '/dleimages/noavatar.png';
+            $avatar = $m['foto'] ? rtrim($config['http_home_url'], '/') . '/' . $m['foto'] : rtrim($config['http_home_url'], '/') . '/templates/' . $config['skin'] . '/dleimages/noavatar.png';
+            $usr_link = forum_url('forum_user', ['user' => urlencode($m['name'])]);
             
             $messages_list .= '
-            <div class="df-pm-read-item" style="border-bottom:1px solid #eee; padding:15px 0;">
-                <div style="display:flex; align-items:center; margin-bottom:10px;">
-                    <img src="'.$avatar.'" style="width:40px; height:40px; border-radius:4px; margin-right:10px;">
-                    <div>
-                        <strong>'.$m_usr.'</strong>
-                        <div style="font-size:11px; color:#999;">'.$m_date.'</div>
+            <div class="df-post df-pm-message-item">
+                <div class="df-post-user">
+                    <div class="df-user-panel">
+                        <img src="'.$avatar.'" class="df-avatar">
+                        <a href="'.$usr_link.'" class="df-post-username">'.$m_usr.'</a>
                     </div>
                 </div>
-                <div style="padding-left:50px; line-height:1.6;">'.$m_text.'</div>
+                <div class="df-post-main">
+                    <div class="df-post-header">
+                        <i class="fa fa-clock-o"></i> '.$m_date.'
+                    </div>
+                    <div class="df-post-content">
+                        '.$m_text.'
+                    </div>
+                </div>
             </div>';
         }
         
@@ -781,7 +936,7 @@ else {
     } else {
         while($row = $db->get_row($pms)) {
             $unread_cls = $row['is_read'] ? '' : 'unread';
-            $pm_avatar  = $row['last_user_foto'] ? rtrim($config['http_home_url'], '/') . '/uploads/fotos/' . $row['last_user_foto'] : rtrim($config['http_home_url'], '/') . '/templates/' . $config['skin'] . '/dleimages/noavatar.png';
+            $pm_avatar  = $row['last_user_foto'] ? rtrim($config['http_home_url'], '/') . '/' . $row['last_user_foto'] : rtrim($config['http_home_url'], '/') . '/templates/' . $config['skin'] . '/dleimages/noavatar.png';
             $pm_from    = htmlspecialchars($row['last_user_name']);
             $pm_title   = stripslashes($row['subject']);
             $pm_date    = date("d.m.Y H:i", $row['updated_at']);
@@ -789,9 +944,14 @@ else {
             
             $pm_rows .= '
             <div class="df-pm-row '.$unread_cls.'">
-                <img src="'.$pm_avatar.'" class="df-pm-avatar">
+                <div class="df-pm-select">
+                    <input type="checkbox" name="selected_pms[]" value="'.intval($row['id']).'" class="df-checkbox-custom">
+                </div>
+                <div class="df-pm-avatar-wrap">
+                    <img src="'.$pm_avatar.'" class="df-pm-avatar">
+                </div>
                 <div class="df-pm-content">
-                    <a href="index.php?do=forum&action=pm&sub=read&id='.$row['id'].'" class="df-pm-title">'.$pm_title.'</a>
+                    <a href="' . forum_url('forum_pm_read', ['newsid' => intval($row['id'])]) . '" class="df-pm-title">'.$pm_title.'</a>
                     <div class="df-pm-snippet">'.$pm_preview.'</div>
                 </div>
                 <div class="df-pm-meta">
@@ -873,7 +1033,7 @@ if(empty($notifs)) {
         $arrow      = '';
         
         if($n['topic_title']) {
-            $topic_url = $config['http_home_url'] . 'index.php?do=forum&action=topic&id=' . intval($n['topic_id']);
+            $topic_url = forum_url('forum_topic', ['newsid' => intval($n['topic_id'])]);
             if($n['post_id']) $topic_url .= '#post-' . intval($n['post_id']);
             $link_start = '<a href="' . $topic_url . '" class="df-notif-row">';
             $link_end   = '</a>';
@@ -979,7 +1139,7 @@ if(empty($parent_cats)) {
                 if(!empty($sub_forums)) {
                     $sub_links = [];
                     foreach($sub_forums as $sscat) {
-                        $ss_url = $config['http_home_url'] . 'index.php?do=forum&action=category&cat=' . urlencode($sscat['alt_name']);
+                        $ss_url = forum_url('forum_cat', ['category' => $sscat['alt_name']]);
                         $sub_links[] = '<a href="' . $ss_url . '" class="df-subcat-link"><i class="fa ' . htmlspecialchars($sscat['icon'] ?: 'fa-file-text-o') . '"></i> ' . htmlspecialchars($sscat['name']) . '</a>';
                     }
                     $sub_cats_html = '<div class="df-subcats-wrap">' . implode(', ', $sub_links) . '</div>';
@@ -994,7 +1154,11 @@ if(empty($parent_cats)) {
                 $last_post_html = '<span class="df-no-post">' . fl('forum_no_posts') . '</span>';
                 
                 if($lt) {
-                    $lt_url   = $config['http_home_url'] . 'index.php?do=forum&action=topic&id=' . intval($lt['id']);
+                    $lt_url = forum_url('forum_topic', [
+                        'newsid'    => intval($lt['id']),
+                        'news_name' => $lt['alt_name'],
+                        'category'  => $lt['cat_slug']
+                    ]);
                     // Direkt son mesaja gitmesi için anchor ekle
                     if (intval($forum['last_post_id']) > 0) {
                         $lt_url .= '#post-' . intval($forum['last_post_id']);
@@ -1006,23 +1170,21 @@ if(empty($parent_cats)) {
                     $lt_title = htmlspecialchars($lt['title']);
                     
                     // XSS Açığı Kapatıldı
-                    $lt_avatar = !empty($lt['last_user_avatar']) ? rtrim($config['http_home_url'], '/') . '/uploads/fotos/' . htmlspecialchars($lt['last_user_avatar']) : $noavatar;
+                    $lt_avatar = !empty($lt['last_user_avatar']) ? rtrim($config['http_home_url'], '/') . '/' . htmlspecialchars($lt['last_user_avatar']) : $noavatar;
                     
                     $last_post_html = '
+                        <img src="' . $lt_avatar . '" class="df-last-post-avatar" alt="' . $lt_user . '">
                         <div class="df-last-post-wrap">
-                            <img src="' . $lt_avatar . '" class="df-last-avatar" alt="' . $lt_user . '">
-                            <div class="df-last-info">
-                                <a href="' . $lt_url . '" class="df-last-title" title="' . $lt_title . '">' . $lt_title . '</a>
-                                <div class="df-last-meta">
-                                    <span class="df-last-user">' . $lt_user . '</span>
-                                    <span class="df-sep">•</span>
-                                    <span>' . $lt_date . '</span>
-                                </div>
+                            <a href="' . $lt_url . '" class="df-last-title" title="' . $lt_title . '">' . $lt_title . '</a>
+                            <div class="df-last-meta">
+                                <span class="df-last-user">' . $lt_user . '</span>
+                                <span class="df-sep">•</span>
+                                <span>' . $lt_date . '</span>
                             </div>
                         </div>';
                 }
 
-                $cat_url = $config['http_home_url'] . 'index.php?do=forum&action=category&cat=' . urlencode($forum['alt_name']);
+                $cat_url = forum_url('forum_cat', ['category' => $forum['alt_name']]);
                 $icon_class = htmlspecialchars($forum['icon'] ?: 'fa-comments');
                 
                 // HTML Satır Çıktısı
@@ -1066,7 +1228,7 @@ $tpl->set('{online_count}', $online_count);
 $last_member_name = htmlspecialchars($stats['last_user']['name'] ?? fl('forum_guest', 'Misafir'));
 $tpl->set('{last_member}', '<a href="' . $config['http_home_url'] . 'user/' . urlencode($stats['last_user']['name'] ?? fl('forum_guest', 'Misafir')) . '/">' . $last_member_name . '</a>');
 
-$tpl->set('{new_topic_btn}', $member_id['user_id'] ? '<a href="index.php?do=forum&action=new_topic" class="df-btn-new-topic"><i class="fa fa-plus"></i> ' . fl('forum_new_topic') . '</a>' : '');
+$tpl->set('{new_topic_btn}', $member_id['user_id'] ? '<a href="' . forum_url('forum_new_topic') . '" class="df-btn-new-topic"><i class="fa fa-plus"></i> ' . fl('forum_new_topic') . '</a>' : '');
 $tpl->set('{SITEURL}', $config['http_home_url']);
 
 $tpl->compile('content'); 
@@ -1141,7 +1303,7 @@ if(!empty($sub_forums)) {
         if(!empty($sub_sub_cats)) {
             $sub_links = [];
             foreach($sub_sub_cats as $sscat) {
-                $ss_url = $config['http_home_url'] . 'index.php?do=forum&action=category&cat=' . urlencode($sscat['alt_name']);
+                $ss_url = forum_url('forum_cat', ['category' => $sscat['alt_name']]);
                 $sub_links[] = '<a href="' . $ss_url . '" class="df-subcat-link"><i class="fa ' . htmlspecialchars($sscat['icon'] ?: 'fa-file-text-o') . '"></i> ' . htmlspecialchars($sscat['name']) . '</a>';
             }
             $sub_cats_links_html = '<div class="df-subcats-wrap">' . implode(', ', $sub_links) . '</div>';
@@ -1155,28 +1317,30 @@ if(!empty($sub_forums)) {
 
         $last_post_html = '<span class="df-no-post">' . fl('forum_no_posts') . '</span>';
         if($lt) {
-            $lt_url   = $config['http_home_url'] . 'index.php?do=forum&action=topic&id=' . intval($lt['id']) . (intval($forum['last_post_id']) > 0 ? '#post-' . intval($forum['last_post_id']) : '');
+            $lt_url = forum_url('forum_topic', [
+                'newsid'    => intval($lt['id']),
+                'news_name' => $lt['alt_name'],
+                'category'  => $lt['cat_slug']
+            ]) . (intval($forum['last_post_id']) > 0 ? '#post-' . intval($forum['last_post_id']) : '');
             $lt_user  = htmlspecialchars($lt['last_username'] ?: $lt['username'] ?: fl('forum_guest'));
             $lt_date_raw = $lt['last_post_date'] ?: $lt['date'];
             $lt_date  = (strtotime($lt_date_raw) > 0) ? date('d.m.Y H:i', strtotime($lt_date_raw)) : '-';
             $lt_title = htmlspecialchars($lt['title']);
-            $lt_avatar = !empty($lt['last_user_avatar']) ? rtrim($config['http_home_url'], '/') . '/uploads/fotos/' . htmlspecialchars($lt['last_user_avatar']) : $noavatar;
+            $lt_avatar = !empty($lt['last_user_avatar']) ? rtrim($config['http_home_url'], '/') . '/' . htmlspecialchars($lt['last_user_avatar']) : $noavatar;
             
             $last_post_html = '
+                <img src="' . $lt_avatar . '" class="df-last-post-avatar" alt="' . $lt_user . '">
                 <div class="df-last-post-wrap">
-                    <img src="' . $lt_avatar . '" class="df-last-avatar" alt="' . $lt_user . '">
-                    <div class="df-last-info">
-                        <a href="' . $lt_url . '" class="df-last-title" title="' . $lt_title . '">' . $lt_title . '</a>
-                        <div class="df-last-meta">
-                            <span class="df-last-user">' . $lt_user . '</span>
-                            <span class="df-sep">•</span>
-                            <span>' . $lt_date . '</span>
-                        </div>
+                    <a href="' . $lt_url . '" class="df-last-title" title="' . $lt_title . '">' . $lt_title . '</a>
+                    <div class="df-last-meta">
+                        <span class="df-last-user">' . $lt_user . '</span>
+                        <span class="df-sep">•</span>
+                        <span>' . $lt_date . '</span>
                     </div>
                 </div>';
         }
 
-        $forum_url = $config['http_home_url'] . 'index.php?do=forum&action=category&cat=' . urlencode($forum['alt_name']);
+        $forum_url = forum_url('forum_cat', ['category' => $forum['alt_name']]);
         $icon_class = htmlspecialchars($forum['icon'] ?: 'fa-comments');
         
         $sub_forums_html .= '
@@ -1214,7 +1378,7 @@ if(empty($topics)) {
 } else {
     foreach($topics as $t) {
         // DÜZELTME: ID'ler intval ile sarıldı
-        $t_url     = $config['http_home_url'] . 'index.php?do=forum&action=topic&id=' . intval($t['id']);
+        $t_url     = forum_url('forum_topic', ['newsid' => intval($t['id']), 'news_name' => $t['alt_name'], 'category' => $cat_slug]);
         $t_title   = htmlspecialchars($t['title']);
         $t_user    = htmlspecialchars($t['username'] ?: fl('forum_guest'));
         
@@ -1231,7 +1395,7 @@ if(empty($topics)) {
 
         // DÜZELTME: XSS açığını kapatmak için htmlspecialchars eklendi
         $last_avatar = !empty($t['last_user_avatar']) 
-            ? rtrim($config['http_home_url'], '/') . '/uploads/fotos/' . htmlspecialchars($t['last_user_avatar']) 
+            ? rtrim($config['http_home_url'], '/') . '/' . htmlspecialchars($t['last_user_avatar']) 
             : $noavatar;
 
         // Durum İkonu
@@ -1264,23 +1428,21 @@ if(empty($topics)) {
                 <div class="df-stat-num">' . $t_views . ' <small>' . fl('forum_views') . '</small></div>
             </div>
             <div class="df-col-last">
+                <img src="' . $last_avatar . '" class="df-last-post-avatar" alt="' . $last_user . '">
                 <div class="df-last-post-wrap">
-                    <img src="' . $last_avatar . '" class="df-last-avatar" alt="' . $last_user . '">
-                    <div class="df-last-info">
-                        <a href="' . $t_url . '#post-' . intval($t['last_post_id'] ?? 0) . '" class="df-last-title">' . $last_user . '</a>
-                        <div class="df-last-meta">' . $last_date . '</div>
-                    </div>
+                    <a href="' . $t_url . '#post-' . intval($t['last_post_id'] ?? 0) . '" class="df-last-title">' . $last_user . '</a>
+                    <div class="df-last-meta">' . $last_date . '</div>
                 </div>
             </div>
         </div>';
     }
 }
 
- $base_url  = $config['http_home_url'] . 'index.php?do=forum&action=category&cat=' . urlencode($cat_slug);
+ $base_url  = forum_url('forum_cat', ['category' => $cat_slug]);
  $pagination = $Forum->pagination($total_topics, $per_page, $page, $base_url);
 
  $new_topic_btn = $is_logged
-    ? '<a href="index.php?do=forum&action=new_topic&cat_id=' . $cat_id . '" class="df-btn-new-topic-sm"><i class="fa fa-plus"></i> ' . fl('forum_new_topic_btn') . '</a>'
+    ? '<a href="' . forum_fix_url(forum_url('forum_new_topic'), 'cat_id=' . $cat_id) . '" class="df-btn-new-topic-sm"><i class="fa fa-plus"></i> ' . fl('forum_new_topic_btn') . '</a>'
     : '';
 
  $tpl->load_template('forum/category.tpl');
@@ -1356,7 +1518,7 @@ if(empty($topics)) {
 } else {
     foreach($topics as $t) {
         $t_id      = intval($t['id']);
-        $t_url     = $config['http_home_url'] . 'index.php?do=forum&action=topic&id=' . $t_id;
+        $t_url     = forum_url('forum_topic', ['newsid' => $t_id, 'news_name' => $t['alt_name'], 'category' => $t['cat_slug']]);
         $t_title   = htmlspecialchars($t['title'], ENT_QUOTES, 'UTF-8');
         $t_user    = htmlspecialchars($t['username'] ?: fl('forum_member'), ENT_QUOTES, 'UTF-8'); // forum_guest yoksa forum_member'a düşer
         
@@ -1369,7 +1531,7 @@ if(empty($topics)) {
         $last_date = ($last_date_raw && strtotime($last_date_raw) > 0) ? date('d.m.Y H:i', strtotime($last_date_raw)) : '-';
 
         $last_avatar = !empty($t['last_user_avatar']) 
-            ? rtrim($config['http_home_url'], '/') . '/uploads/fotos/' . htmlspecialchars($t['last_user_avatar'], ENT_QUOTES, 'UTF-8') 
+            ? rtrim($config['http_home_url'], '/') . '/' . htmlspecialchars($t['last_user_avatar'], ENT_QUOTES, 'UTF-8') 
             : $noavatar;
 
         $status_icon = '<i class="fa fa-comment-dots df-icon-muted"></i>';
@@ -1395,19 +1557,17 @@ if(empty($topics)) {
                 <div class="df-stat-num">' . $t_views . ' <small>' . fl('forum_views') . '</small></div>
             </div>
             <div class="df-col-last">
+                <img src="' . $last_avatar . '" class="df-last-post-avatar" alt="' . $last_user . '">
                 <div class="df-last-post-wrap">
-                    <img src="' . $last_avatar . '" class="df-last-avatar" alt="' . $last_user . '">
-                    <div class="df-last-info">
-                        <a href="' . $t_url . '#post-' . intval($t['last_post_id'] ?? 0) . '" class="df-last-title">' . $last_user . '</a>
-                        <div class="df-last-meta">' . $last_date . '</div>
-                    </div>
+                    <a href="' . $t_url . '#post-' . intval($t['last_post_id'] ?? 0) . '" class="df-last-title">' . $last_user . '</a>
+                    <div class="df-last-meta">' . $last_date . '</div>
                 </div>
             </div>
         </div>';
     }
 }
 
- $base_url = $config['http_home_url'] . 'index.php?do=forum&action=search&q=' . urlencode($q);
+ $base_url = forum_fix_url(forum_url('forum_search'), 'q=' . urlencode($q));
  $pagination = $Forum->pagination($total_topics, $per_page, $page, $base_url);
 
  $tpl->load_template('forum/category.tpl'); 
@@ -1495,7 +1655,7 @@ if(isset($_POST['submit_topic'])) {
             if(isset($result['error'])) {
                 $error = $result['error'];
             } else {
-                header("Location: " . $config['http_home_url'] . "index.php?do=forum&action=topic&id=" . intval($result['topic_id']));
+                header("Location: " . forum_url('forum_topic', ['newsid' => intval($result['topic_id'])]));
                 exit;
             }
         }
@@ -1507,12 +1667,6 @@ if(isset($_POST['submit_topic'])) {
     }
 }
 
-// 3. Editor Hazırlığı
-if ( !class_exists( 'HTMLPurifier_Config' ) ) {
-    include_once (DLEPlugins::Check( ENGINE_DIR . '/classes/htmlpurifier/HTMLPurifier.standalone.php' ));
-}
-
-include_once (DLEPlugins::Check(ENGINE_DIR . '/classes/parse.class.php'));
  $parse = new ParseFilter();
  $editor_html = "";
 
@@ -1630,7 +1784,7 @@ define('RSSPARSE', false);
         if (!$post) die("error"); 
 
         $safe_topic_id = intval($post['topic_id']);
-        $raw_topic_link = $config['http_home_url'] . 'index.php?do=forum&action=topic&id=' . $safe_topic_id;
+        $raw_topic_link = forum_url('forum_topic', ['newsid' => $safe_topic_id]);
         
         // DÜZELTME: Çift encode kaldırıldı (htmlspecialchars kullanılmadan direkt safesql)
         $raw_complaint_text = "[FORUM] Mesaj ID: #{$id} | Konu: {$post['title']} | Link: {$raw_topic_link} | Neden: {$text}";
@@ -1796,11 +1950,13 @@ class Forum {
         $offset   = (max(1, intval($page)) - 1) * $per_page;
         return $this->db->super_query(
             "SELECT t.*, u.name as username, u.foto as avatar,
-             lp.date as lp_date, lu.name as last_username, lu.foto as last_user_avatar
+             lp.date as lp_date, lu.name as last_username, lu.foto as last_user_avatar,
+             c.alt_name as cat_slug
              FROM " . PREFIX . "_forum_topics t
              LEFT JOIN " . USERPREFIX . "_users u ON u.user_id = t.user_id
              LEFT JOIN " . PREFIX . "_forum_posts lp ON lp.id = t.last_post_id
              LEFT JOIN " . USERPREFIX . "_users lu ON lu.user_id = t.last_user_id
+             LEFT JOIN " . PREFIX . "_forum_cats c ON c.id = t.cat_id
              WHERE MATCH(t.title) AGAINST('$query' IN BOOLEAN MODE) AND t.is_deleted = '0'
              ORDER BY t.last_post_date DESC
              LIMIT $offset, $per_page",
@@ -2251,7 +2407,7 @@ class Forum {
         );
         if(!$post) return ['error' => fl('forum_err_post_not_found')];
 
-        $raw_topic_link = $this->config['http_home_url'] . 'index.php?do=forum&action=topic&id=' . $post['topic_id'];
+        $raw_topic_link = forum_url('forum_topic', ['newsid' => $post['topic_id']]);
         // DÜZELTME: htmlspecialchars kaldırıldı, çift encode önlendi
         $raw_complaint_text = "[FORUM] Mesaj ID: #$post_id | Konu: {$post['title']} | Link: $raw_topic_link | Neden: $reason";
         $complaint_text = $this->db->safesql($raw_complaint_text);
@@ -2612,6 +2768,9 @@ class Forum {
 
 if(!defined('DATALIFEENGINE')) die("Hacking attempt!");
 
+// SEO Helper Fonksiyonları
+include_once (DLEPlugins::Check(ENGINE_DIR . '/forum/forum.helper.php'));
+
 /**
  * 1. GLOBAL DEĞİŞKENLERİ HAZIRLA
  * DLE içerisindeki ana değişkenleri içeri aktarıyoruz ki 
@@ -2909,10 +3068,39 @@ if(!defined('DATALIFEENGINE') || !defined('LOGGED_IN')) die("Hacking attempt!");
 // Grup 1 (Admin) ve Grup 2 (Editör) erişimi
 if(!in_array($member_id['user_group'], [1, 2])) msg("error", $lang['addnews_denied'], $lang['db_denied']);
 
+// SEO Fonksiyonlarını Admin Panel İçin de Yükle
+if (!function_exists('forum_url')) {
+    include_once(DLEPlugins::Check(ENGINE_DIR . '/forum/forum.helper.php'));
+}
+
 if(!class_exists('Forum')) {
     include_once(DLEPlugins::Check(ENGINE_DIR . '/forum/classes/forum.class.php'));
 }
 $Forum = new Forum($db, $member_id, $config);
+$current_version = '1.1.2';
+
+// ─── GÜNCELLEME KONTROLÜ (GitHub) ───
+$update_data = dle_cache('forum_update_info', 86400); 
+if (!$update_data) {
+    $remote_url = 'https://raw.githubusercontent.com/dle-hub/dle-native-forum/master/release.json';
+    $remote_json = @file_get_contents($remote_url);
+    if ($remote_json) {
+        $data = json_decode($remote_json, true);
+        if ($data && isset($data['version'])) {
+            $update_data = $data['version'];
+            create_cache('forum_update_info', $update_data, 86400);
+        }
+    }
+}
+
+$version_tag = '';
+if ($update_data) {
+    if (version_compare($update_data, $current_version, '>')) {
+        $version_tag = '<span style="display:inline-block; padding:2px 8px; background:#ef4444; color:#fff; border-radius:4px; font-size:10px; margin-left:10px; vertical-align:middle; font-weight:700;">YENİ SÜRÜM: v'.$update_data.'</span>';
+    } else {
+        $version_tag = '<span style="display:inline-block; padding:2px 8px; background:#10b981; color:#fff; border-radius:4px; font-size:10px; margin-left:10px; vertical-align:middle; font-weight:700;">SÜRÜM GÜNCEL</span>';
+    }
+}
 
 // ─── ADMIN DİL DOSYASI YÜKLE ───
 $forum_admin_lang = isset($selected_language) ? $selected_language : $config['langs'];
@@ -3146,7 +3334,7 @@ if(isset($_POST['save_action'])) {
 echoheader("<i class='fa fa-comments-o'></i> " . fl('forum_admin_title', 'DLE Native Forum'), fl('forum_admin_subtitle', 'Admin Panel'));
 
 $action = isset($_GET['action']) ? trim($_GET['action']) : 'main';
-$allowed_actions = ['main','cats','ranks','words','complaints','logs','settings','topics','pending'];
+$allowed_actions = ['main','cats','ranks','words','complaints','logs','settings','topics','pending','quick_mod'];
 if(!in_array($action, $allowed_actions)) $action = 'main';
 
 $act_main        = ($action == 'main')       ? 'class="active"' : '';
@@ -3207,6 +3395,26 @@ $L_CONFIRM = fl('forum_confirm_delete');
 // Switch: Action
 // ----------------------------------------------------------------
 switch($action) {
+
+    case 'quick_mod':
+        $id   = intval($_GET['id']);
+        $type = trim($_GET['type']);
+        $hash = trim($_GET['hash']);
+        
+        if($hash !== (string)$dle_login_hash) die("Hacking attempt!");
+        
+        if($id > 0) {
+            if($type == 'lock') {
+                $db->query("UPDATE " . PREFIX . "_forum_topics SET is_locked = 1 - is_locked WHERE id = '$id'");
+            } elseif($type == 'pin') {
+                $db->query("UPDATE " . PREFIX . "_forum_topics SET is_pinned = 1 - is_pinned WHERE id = '$id'");
+            }
+        }
+        
+        $refer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : "?mod=forum";
+        header("Location: " . $refer);
+        die();
+    break;
 
     case 'cats':
         $edit_cat = null;
@@ -3560,7 +3768,7 @@ WFORM;
                     <td>{$row['id']}</td>
                     <td><strong>" . safe_out($row['mod_name']) . "</strong></td>
                     <td>{$lbl}</td>
-                    <td>" . ($row['topic_id'] > 0 ? "<a href='index.php?do=forum&action=topic&id={$row['topic_id']}' target='_blank'>#{$row['topic_id']}</a>" : '-') . "</td>
+                    <td>" . ($row['topic_id'] > 0 ? "<a href='" . forum_url('forum_topic', ['newsid' => intval($row['topic_id'])]) . "' target='_blank'>#{$row['topic_id']}</a>" : '-') . "</td>
                     <td>" . ($row['post_id'] > 0 ? "#{$row['post_id']}" : '-') . "</td>
                     <td><code>" . safe_out($row['ip']) . "</code></td>
                     <td>" . safe_out($row['date']) . "</td>
@@ -3646,12 +3854,21 @@ WFORM;
         echo '<thead><tr><th>#</th><th>' . $T_TOPIC . '</th><th>' . $T_CAT . '</th><th>' . $T_AUTH . '</th><th>' . $T_REP . '</th><th>' . $T_VIEW . '</th><th>' . $T_DATE . '</th><th class="text-center">' . $L_ACTION . '</th></tr></thead><tbody>';
         if($tlist) {
             foreach($tlist as $row) {
-                $b = ($row['is_pinned'] ? '<span class="label bg-teal" style="font-size:9px">' . mb_strtoupper($L_PIN, 'UTF-8') . '</span> ' : '')
-                   . ($row['is_locked'] ? '<span class="label bg-red"  style="font-size:9px">' . mb_strtoupper($L_LCK, 'UTF-8') . '</span>' : '');
                 $tid   = intval($row['id']);
+                $l_url = "?mod=forum&action=quick_mod&type=lock&id=$tid&hash=$dle_login_hash";
+                $p_url = "?mod=forum&action=quick_mod&type=pin&id=$tid&hash=$dle_login_hash";
+                
+                $lock_btn = $row['is_locked'] 
+                    ? '<a href="'.$l_url.'" class="label bg-red" style="font-size:9px; text-transform:uppercase;">' . $L_LCK . '</a> ' 
+                    : '<a href="'.$l_url.'" class="label bg-slate" style="font-size:9px; text-transform:uppercase; opacity:0.5;">' . $L_LCK . '</a> ';
+                
+                $pin_btn = $row['is_pinned'] 
+                    ? '<a href="'.$p_url.'" class="label bg-teal" style="font-size:9px; text-transform:uppercase;">' . $L_PIN . '</a> ' 
+                    : '<a href="'.$p_url.'" class="label bg-slate" style="font-size:9px; text-transform:uppercase; opacity:0.5;">' . $L_PIN . '</a> ';
+
                 echo '<tr>'
                    . "<td>$tid</td>"
-                   . "<td><a href='index.php?do=forum&action=topic&id=$tid' target='_blank'><strong>" . safe_out($row['title']) . "</strong></a> $b</td>"
+                   . "<td><a href='" . forum_url('forum_topic', ['newsid' => $tid]) . "' target='_blank'><strong>" . safe_out($row['title']) . "</strong></a> <div style='margin-top:4px;'>$pin_btn $lock_btn</div></td>"
                    . "<td><small>" . safe_out($row['cat_name']) . "</small></td>"
                    . "<td>" . safe_out($row['username']) . "</td>"
                    . "<td><span class='badge bg-slate-600'>{$row['replies']}</span></td>"
@@ -3711,7 +3928,7 @@ WFORM;
                 echo '<tr>'
                    . "<td>$pid</td>"
                    . "<td><strong>" . safe_out($row['username']) . "</strong></td>"
-                   . "<td><a href='index.php?do=forum&action=topic&id=$ptid' target='_blank'>" . safe_out($row['topic_title']) . "</a></td>"
+                   . "<td><a href='" . forum_url('forum_topic', ['newsid' => $ptid]) . "' target='_blank'>" . safe_out($row['topic_title']) . "</a></td>"
                    . "<td><small class='text-muted'>$prev</small></td>"
                    . "<td><small>" . safe_out($row['date']) . "</small></td>"
                    . "<td class='text-center' style='white-space:nowrap'>"
@@ -3848,7 +4065,7 @@ HTML;
             echo "<div class='alert alert-info no-border' style='padding:10px 15px; margin-bottom:15px;'>
                 <i class='fa fa-clock-o position-left'></i>
                 <strong>{$L_LPOST}:</strong>
-                <a href='index.php?do=forum&action=topic&id={$lp_topic_id}' target='_blank'>{$lp_topic}</a>
+                <a href='" . forum_url('forum_topic', ['newsid' => intval($lp_topic_id)]) . "' target='_blank'>{$lp_topic}</a>
                 &nbsp;&mdash;&nbsp; <strong>{$lp_user}</strong> {$L_LBY} &nbsp;&mdash;&nbsp; {$lp_date}
             </div>";
         }
@@ -3879,17 +4096,26 @@ HTML;
             $L_PIN = fl('forum_pin');
             $L_LCK = fl('forum_lock');
             foreach($recent_topics as $row) {
-                $lock_badge = $row['is_locked'] ? '<span class="label bg-red" style="font-size:9px;">'.mb_strtoupper($L_LCK, 'UTF-8').'</span>' : '';
-                $pin_badge  = $row['is_pinned'] ? '<span class="label bg-teal" style="font-size:9px;">'.mb_strtoupper($L_PIN, 'UTF-8').'</span>' : '';
                 $drid = intval($row['id']);
+                $l_url = "?mod=forum&action=quick_mod&type=lock&id=$drid&hash=$dle_login_hash";
+                $p_url = "?mod=forum&action=quick_mod&type=pin&id=$drid&hash=$dle_login_hash";
+                
+                $lock_btn = $row['is_locked'] 
+                    ? '<a href="'.$l_url.'" class="label bg-red" style="font-size:9px; text-transform:uppercase;">' . $L_LCK . '</a> ' 
+                    : '<a href="'.$l_url.'" class="label bg-slate" style="font-size:9px; text-transform:uppercase; opacity:0.5;">' . $L_LCK . '</a> ';
+                
+                $pin_btn = $row['is_pinned'] 
+                    ? '<a href="'.$p_url.'" class="label bg-teal" style="font-size:9px; text-transform:uppercase;">' . $L_PIN . '</a> ' 
+                    : '<a href="'.$p_url.'" class="label bg-slate" style="font-size:9px; text-transform:uppercase; opacity:0.5;">' . $L_PIN . '</a> ';
+
                 echo '<tr>'
-                   . "<td><a href='index.php?do=forum&action=topic&id=$drid' target='_blank'>" . safe_out($row['title']) . "</a> $lock_badge $pin_badge</td>"
+                   . "<td><a href='" . forum_url('forum_topic', ['newsid' => $drid]) . "' target='_blank'>" . safe_out($row['title']) . "</a><br><div style='margin-top:4px;'>$pin_btn $lock_btn</div></td>"
                    . "<td><strong>" . safe_out($row['username']) . "</strong></td>"
                    . "<td><span class='badge bg-slate-600'>{$row['replies']}</span></td>"
                    . "<td><span class='badge bg-slate'>{$row['views']}</span></td>"
                    . "<td><small>" . safe_out($row['date']) . "</small></td>"
                    . "<td>"
-                   . "<a href='index.php?do=forum&action=topic&id=$drid' target='_blank' class='btn btn-xs btn-default btn-raised'><i class='fa fa-eye'></i></a> "
+                   . "<a href='" . forum_url('forum_topic', ['newsid' => $drid]) . "' target='_blank' class='btn btn-xs btn-default btn-raised'><i class='fa fa-eye'></i></a> "
                    . "<button type='button' class='btn btn-xs btn-warning btn-raised' onclick='openMoveModal($drid)'><i class='fa fa-arrows'></i></button>"
                    . "</td></tr>";
             }
@@ -3908,7 +4134,7 @@ HTML;
             foreach($recent_posts as $row) {
                 $rp_tid = intval($row['topic_id']);
                 echo "<tr>
-                    <td><a href='index.php?do=forum&action=topic&id=$rp_tid' target='_blank'>" . safe_out($row['topic_title']) . "</a></td>
+                    <td><a href='" . forum_url('forum_topic', ['newsid' => $rp_tid]) . "' target='_blank'>" . safe_out($row['topic_title']) . "</a></td>
                     <td>" . safe_out($row['username']) . "</td>
                     <td><small>" . safe_out($row['date']) . "</small></td>
                 </tr>";
@@ -4010,7 +4236,7 @@ function closeMoveModal() {
 function doMoveTopic() {
     var cat  = document.getElementById('forum-move-cat').value;
     var csrf = <?php echo json_encode($dle_login_hash); ?>;
-    var url  = <?php echo json_encode($config['http_home_url']); ?> + 'index.php?do=forum&action=ajax';
+    var url  = <?php echo json_encode(forum_url('forum_ajax')); ?>;
     fetch(url, {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
         body: 'action=ajax&act=move_topic&topic_id='+_mvTopicId+'&new_cat_id='+cat+'&user_hash='+csrf
     }).then(function(r){return r.json();}).then(function(d){
@@ -4026,6 +4252,13 @@ document.addEventListener('click', function(e){
 });
 </script>
 <?php
+echo <<<HTML
+<div style="margin-top:30px; border-top:1px solid #e2e8f0; padding-top:20px; text-align:center; color:#64748b; font-size:12px; line-height:1.6;">
+    DLE Native Forum - Nexus Ultimate Core <span style="color:#1e293b; font-weight:700;">v1.1.2</span> {$version_tag}<br>
+    Developed by <a href="https://dlehub.com.tr/" target="_blank" style="font-weight:800; color:#0ea5e9; text-decoration:none;">Dlehub</a> & <span style="font-weight:800; color:#1e293b;">Elegance</span>
+</div>
+HTML;
+
 echofooter();
 ?>
 ]]></replacecode>
@@ -4067,21 +4300,21 @@ $hash = isset($_GET['hash']) ? $_GET['hash'] : '';
 
 if (isset($_GET['lock_topic']) && $is_logged) {
     if ($Forum->verifyCsrf($hash) && $Forum->lockTopic($topic_id, intval($_GET['lock_topic']))) {
-        header("Location: " . $config['http_home_url'] . "index.php?do=forum&action=topic&id=" . $topic_id);
+        header("Location: " . forum_url('forum_topic', ['newsid' => $topic_id]));
         exit;
     }
 }
 
 if (isset($_GET['pin_topic']) && $is_logged) {
     if ($Forum->verifyCsrf($hash) && $Forum->pinTopic($topic_id, intval($_GET['pin_topic']))) {
-        header("Location: " . $config['http_home_url'] . "index.php?do=forum&action=topic&id=" . $topic_id);
+        header("Location: " . forum_url('forum_topic', ['newsid' => $topic_id]));
         exit;
     }
 }
 
 if (isset($_GET['delete_topic']) && $_GET['delete_topic'] == '1' && $is_logged) {
     if ($Forum->verifyCsrf($hash) && $Forum->deleteTopic($topic_id)) {
-        header("Location: " . $config['http_home_url'] . "index.php?do=forum");
+        header("Location: " . forum_url('forum_main'));
         exit;
     }
 }
@@ -4089,16 +4322,10 @@ if (isset($_GET['delete_topic']) && $_GET['delete_topic'] == '1' && $is_logged) 
 if (isset($_GET['del_post']) && $is_logged) {
     if ($Forum->verifyCsrf($hash)) {
         $Forum->deletePost(intval($_GET['del_post']));
-        header("Location: " . $config['http_home_url'] . "index.php?do=forum&action=topic&id=" . $topic_id);
+        header("Location: " . forum_url('forum_topic', ['newsid' => $topic_id]));
         exit;
     }
 }
-
-// --- Parser Yükle ---
-if (!class_exists('HTMLPurifier_Config')) {
-    include_once(DLEPlugins::Check(ENGINE_DIR . '/classes/htmlpurifier/HTMLPurifier.standalone.php'));
-}
-include_once(DLEPlugins::Check(ENGINE_DIR . '/classes/parse.class.php'));
 
 $parse          = new ParseFilter();
 $parse->safe_mode = true;
@@ -4174,7 +4401,7 @@ if (isset($_POST['submit_reply']) && $is_logged) {
                     if (isset($op['error'])) {
                         $reply_error = $op['error'];
                     } else {
-                        header("Location: " . $config['http_home_url'] . "index.php?do=forum&action=topic&id=" . $topic_id . "#post-" . $edit_pid);
+                        header("Location: " . forum_url('forum_topic', ['newsid' => $topic_id]) . "#post-" . $edit_pid);
                         exit;
                     }
                 }
@@ -4186,7 +4413,7 @@ if (isset($_POST['submit_reply']) && $is_logged) {
                 } elseif (isset($result['pending'])) {
                     $reply_error = '<span style="color:#10b981">✓ ' . $result['message'] . '</span>';
                 } else {
-                    header("Location: " . $config['http_home_url'] . "index.php?do=forum&action=topic&id=" . $topic_id . "#post-" . $result['post_id']);
+                    header("Location: " . forum_url('forum_topic', ['newsid' => $topic_id]) . "#post-" . $result['post_id']);
                     exit;
                 }
             }
@@ -4267,7 +4494,7 @@ if ($is_logged) {
 $noavatar  = rtrim($config['http_home_url'], '/') . '/templates/' . $config['skin'] . '/dleimages/noavatar.png';
 $posts_html = '';
 $csrf      = $Forum->csrfToken();
-$ajax_url  = $config['http_home_url'] . 'index.php?do=forum&action=ajax';
+$ajax_url  = forum_url('forum_ajax');
 
 // ============================================================
 // JAVASCRIPT - Tüm frontend fonksiyonları
@@ -4455,7 +4682,7 @@ foreach ($posts as $idx => $p) {
         $p_updated = '';
     }
 
-    $p_avatar  = $p['avatar'] ? rtrim($config['http_home_url'], '/') . '/uploads/fotos/' . $p['avatar'] : $noavatar;
+    $p_avatar  = $p['avatar'] ? rtrim($config['http_home_url'], '/') . '/' . $p['avatar'] : $noavatar;
     $p_profile = $config['http_home_url'] . 'user/' . urlencode($p['username'] ? $p['username'] : fl('forum_guest')) . '/';
     $is_op     = ($is_first_page && $idx === 0);
 
@@ -4554,9 +4781,9 @@ foreach ($posts as $idx => $p) {
 
         // Düzenle ve Sil butonları (sahibi veya moderatör)
         if ($p_uid == intval($member_id['user_id']) || $Forum->canDo('moderate')) {
-            $action_btns .= ' <a href="index.php?do=forum&action=topic&id=' . $topic_id . '&edit_post=' . $p_id . '#reply" class="df-btn-action" title="Düzenle"><i class="fa fa-pencil"></i></a>';
+            $action_btns .= ' <a href="' . forum_fix_url(forum_url('forum_topic', ['newsid' => $topic_id]), 'edit_post=' . $p_id) . '#reply" class="df-btn-action" title="Düzenle"><i class="fa fa-pencil"></i></a>';
             $del_hash     = $Forum->csrfToken();
-            $action_btns .= ' <a href="javascript:void(0)" onclick="if(confirm(\'Silinecek emin misiniz?\')) window.location=\'index.php?do=forum&action=topic&id=' . $topic_id . '&del_post=' . $p_id . '&hash=' . $del_hash . '\'" class="df-btn-action" title="Sil"><i class="fa fa-trash"></i></a>';
+            $action_btns .= ' <a href="javascript:void(0)" onclick="if(confirm(\'Silinecek emin misiniz?\')) window.location=\'' . forum_fix_url(forum_url('forum_topic', ['newsid' => $topic_id]), "del_post=" . $p_id . "&hash=" . $del_hash) . '\'" class="df-btn-action" title="Sil"><i class="fa fa-trash"></i></a>';
         }
     }
 
@@ -4568,7 +4795,7 @@ foreach ($posts as $idx => $p) {
         $sender_group = intval($member_id['user_id']);
         if (isset($user_group[$member_id['user_group']]['allow_pm']) && $user_group[$member_id['user_group']]['allow_pm']) {
             if (isset($user_group[$group_id]['allow_pm']) && $user_group[$group_id]['allow_pm']) {
-                $pm_link     = $config['http_home_url'] . "index.php?do=forum&action=pm&sub=compose&to=" . urlencode($p_user);
+                $pm_link     = forum_fix_url(forum_url('forum_pm'), 'sub=compose&to=' . urlencode($p_user));
                 $pm_btn_html = '<a href="' . $pm_link . '" class="df-btn-pm"><i class="fa fa-envelope"></i> Özel Mesaj</a>';
             }
         }
@@ -4619,16 +4846,16 @@ if ($total_pages > 1) {
     $pagination_html = '<div class="df-pagination">';
 
     if ($current_page > 1) {
-        $pagination_html .= '<a href="index.php?do=forum&action=topic&id=' . $topic_id . '&page=' . ($current_page - 1) . '" class="df-page-btn"><i class="fa fa-chevron-left"></i></a>';
+        $pagination_html .= '<a href="' . forum_fix_url(forum_url('forum_topic', ['newsid' => $topic_id]), 'page=' . ($current_page - 1)) . '" class="df-page-btn"><i class="fa fa-chevron-left"></i></a>';
     }
 
     for ($i = 1; $i <= $total_pages; $i++) {
         $active_cls = ($i == $current_page) ? ' active' : '';
-        $pagination_html .= '<a href="index.php?do=forum&action=topic&id=' . $topic_id . '&page=' . $i . '" class="df-page-btn' . $active_cls . '">' . $i . '</a>';
+        $pagination_html .= '<a href="' . forum_fix_url(forum_url('forum_topic', ['newsid' => $topic_id]), 'page=' . $i) . '" class="df-page-btn' . $active_cls . '">' . $i . '</a>';
     }
 
     if ($current_page < $total_pages) {
-        $pagination_html .= '<a href="index.php?do=forum&action=topic&id=' . $topic_id . '&page=' . ($current_page + 1) . '" class="df-page-btn"><i class="fa fa-chevron-right"></i></a>';
+        $pagination_html .= '<a href="' . forum_fix_url(forum_url('forum_topic', ['newsid' => $topic_id]), 'page=' . ($current_page + 1)) . '" class="df-page-btn"><i class="fa fa-chevron-right"></i></a>';
     }
 
     $pagination_html .= '</div>';
@@ -4649,9 +4876,9 @@ if ($is_logged && $Forum->canDo('moderate')) {
 
     $admin_toolbar = '<div class="df-admin-bar">
         <span class="df-admin-label"><i class="fa fa-shield"></i> YÖNETİM:</span>
-        <a href="index.php?do=forum&action=topic&id=' . $topic_id . '&lock_topic=' . $lock_val . '&hash=' . $hash_cr . '" class="df-btn-mod"><i class="fa ' . $lock_icon . '"></i> ' . $lock_text . '</a>
-        <a href="index.php?do=forum&action=topic&id=' . $topic_id . '&pin_topic=' . $pin_val . '&hash=' . $hash_cr . '" class="df-btn-mod"><i class="fa fa-thumb-tack"></i> ' . $pin_text . '</a>
-        <a href="javascript:void(0)" onclick="if(confirm(\'Konuyu silmek üzeresiniz, emin misiniz?\')) window.location=\'index.php?do=forum&action=topic&id=' . $topic_id . '&delete_topic=1&hash=' . $hash_cr . '\'" class="df-btn-mod df-btn-mod-danger"><i class="fa fa-trash"></i> Konuyu Sil</a>
+        <a href="' . forum_fix_url(forum_url('forum_topic', ['newsid' => $topic_id]), 'lock_topic=' . $lock_val . '&hash=' . $hash_cr) . '" class="df-btn-mod"><i class="fa ' . $lock_icon . '"></i> ' . $lock_text . '</a>
+        <a href="' . forum_fix_url(forum_url('forum_topic', ['newsid' => $topic_id]), 'pin_topic=' . $pin_val . '&hash=' . $hash_cr) . '" class="df-btn-mod"><i class="fa fa-thumb-tack"></i> ' . $pin_text . '</a>
+        <a href="javascript:void(0)" onclick="if(confirm(\'Konuyu silmek üzeresiniz, emin misiniz?\')) window.location=\'' . forum_fix_url(forum_url('forum_topic', ['newsid' => $topic_id]), "delete_topic=1&hash=" . $hash_cr) . '\'" class="df-btn-mod df-btn-mod-danger"><i class="fa fa-trash"></i> Konuyu Sil</a>
     </div>';
 }
 
@@ -4690,7 +4917,7 @@ if ($is_logged) {
 $notif_btn = '';
 if ($is_logged) {
     $notif_count = intval($Forum->countUnreadNotifs());
-    $notif_btn   = '<a href="index.php?do=forum&action=notifications" class="df-btn-notif" style="position:relative;display:inline-flex;"><i class="fa fa-bell"></i><span id="df-notif-badge" class="df-notif-badge" style="display:' . ($notif_count > 0 ? 'inline-flex' : 'none') . '">' . $notif_count . '</span></a>';
+    $notif_btn   = '<a href="' . forum_url('forum_notifications') . '" class="df-btn-notif" style="position:relative;display:inline-flex;"><i class="fa fa-bell"></i><span id="df-notif-badge" class="df-notif-badge" style="display:' . ($notif_count > 0 ? 'inline-flex' : 'none') . '">' . $notif_count . '</span></a>';
 }
 
 // ============================================================
@@ -4802,6 +5029,11 @@ if (!defined('DATALIFEENGINE')) {
     die("Hacking attempt!");
 }
 
+// SEO Fonksiyonlarını Yükle (Hata almamak için kontrol ekledik)
+if (!function_exists('forum_url')) {
+    require_once(DLEPlugins::Check(ENGINE_DIR . '/forum/forum.helper.php'));
+}
+
 // --- PARAMETRİK LİMİT ---
 // Kullanım: {include file="engine/modules/forum_block.php?limit=12"}
 // $_GET['limit'] DLE include mekanizması ile aktarılır.
@@ -4827,7 +5059,7 @@ $forum_block  = dle_cache($cache_key, $config['skin']);
 if (!$forum_block) {
     $noavatar_path = rtrim($config['http_home_url'], '/') . '/templates/' . $config['skin'] . '/dleimages/noavatar.png';
 
-    $db->query("SELECT t.id, t.title, t.date, t.replies, u.name, u.foto, c.name as cat_name
+    $db->query("SELECT t.id, t.title, t.alt_name, t.date, t.replies, u.name, u.foto, c.name as cat_name, c.alt_name as cat_alt_name
                 FROM " . PREFIX . "_forum_topics t
                 LEFT JOIN " . USERPREFIX . "_users u ON t.user_id = u.user_id
                 LEFT JOIN " . PREFIX . "_forum_cats c ON t.cat_id = c.id
@@ -4872,9 +5104,13 @@ if (!$forum_block) {
                 $safe_foto = '';
             }
         }
-        $avatar = ($safe_foto !== '') ? rtrim($config['http_home_url'], '/') . '/uploads/fotos/' . $safe_foto : $noavatar_path;
+        $avatar = ($safe_foto !== '') ? rtrim($config['http_home_url'], '/') . '/' . $safe_foto : $noavatar_path;
 
-        $safe_link = $config['http_home_url'] . "index.php?do=forum&action=topic&id=" . $safe_id;
+        $safe_link = forum_url('forum_topic', [
+            'newsid' => $safe_id,
+            'news_name' => $row['alt_name'],
+            'category' => $row['cat_alt_name']
+        ]);
 
         $tpl->set('{title}', $safe_title);
         $tpl->set('{link}', $safe_link);
@@ -4931,11 +5167,12 @@ echo $forum_block;
 	$tpl->set( '{forum-rank}', $forum_rank_html );
 	// --- Forum Bilgileri Entegrasyonu ---
 ]]></replacecode>
+			<enabled>1</enabled>
 		</operation>
 	</file>
-<file name="engine/forum/actions/user_posts.php">
-    <operation action="create">
-        <replacecode><![CDATA[<?php
+	<file name="engine/forum/actions/user_posts.php">
+		<operation action="create">
+			<replacecode><![CDATA[<?php
 if(!defined('DATALIFEENGINE')) die("Hacking attempt!");
 
 $user_name = isset($_GET['user']) ? urldecode($_GET['user']) : '';
@@ -4960,7 +5197,7 @@ $offset = ($page - 1) * $per_page;
 
 $base_url = rtrim($config['http_home_url'], '/') . '/';
 $noavatar = $base_url . 'templates/' . $config['skin'] . '/dleimages/noavatar.png';
-$user_avatar = !empty($user_row['foto']) ? $base_url . 'uploads/fotos/' . $user_row['foto'] : $noavatar;
+$user_avatar = !empty($user_row['foto']) ? $base_url . $user_row['foto'] : $noavatar;
 
 // Toplam mesaj sayısı
 $total_posts = $db->super_query("SELECT COUNT(*) as c FROM " . PREFIX . "_forum_posts WHERE user_id = '$user_id' AND is_deleted = '0'");
@@ -4997,11 +5234,11 @@ if(empty($posts)) {
             <div class="card-body py-2 px-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <a href="' . $config['http_home_url'] . 'index.php?do=forum&action=topic&id=' . $p_topic_id . '#post-' . $p_id . '" class="font-weight-bold" style="font-size: 14px;">' . $p_title . '</a>
+                        <a href="' . forum_url('forum_topic', ['newsid' => $p_topic_id]) . '#post-' . $p_id . '" class="font-weight-bold" style="font-size: 14px;">' . $p_title . '</a>
                         <small class="text-muted d-block">' . $p_cat . ' • ' . $p_date . '</small>
                         <p class="mt-1 mb-0 text-muted" style="font-size: 12px;">' . $p_text . '</p>
                     </div>
-                    <a href="' . $config['http_home_url'] . 'index.php?do=forum&action=topic&id=' . $p_topic_id . '#post-' . $p_id . '" class="btn btn-xs btn-outline-primary" style="border-radius: 15px;">
+                    <a href="' . forum_url('forum_topic', ['newsid' => $p_topic_id]) . '#post-' . $p_id . '" class="btn btn-xs btn-outline-primary" style="border-radius: 15px;">
                         <i class="fa fa-arrow-right"></i>
                     </a>
                 </div>
@@ -5017,7 +5254,7 @@ if($total_pages > 1) {
     $pagination = '<div class="text-center mt-3">';
     for($i = 1; $i <= $total_pages; $i++) {
         $active = ($i == $page) ? 'btn-primary' : 'btn-outline-primary';
-        $pagination .= '<a href="?do=forum&action=user_posts&user=' . urlencode($user_name) . '&page=' . $i . '" class="btn btn-sm ' . $active . ' mr-1" style="border-radius: 15px;">' . $i . '</a>';
+        $pagination .= '<a href="' . forum_fix_url(forum_url('forum_user', ['user' => $user_name]), 'page=' . $i) . '" class="btn btn-sm ' . $active . ' mr-1" style="border-radius: 15px;">' . $i . '</a>';
     }
     $pagination .= '</div>';
 }
@@ -5059,7 +5296,63 @@ if(!isset($tpl->result['user_posts_tpl']) || empty($tpl->result['user_posts_tpl'
 $tpl->clear();
 $metatags['title'] = htmlspecialchars($user_name) . ' - Forum Mesajları';
 ?>]]></replacecode>
-        <enabled>1</enabled>
-    </operation>
-</file>
+			<enabled>1</enabled>
+		</operation>
+	</file>
+
+	<file name="engine/forum/forum.helper.php">
+		<operation action="create">
+			<replacecode><![CDATA[<?php
+if(!defined('DATALIFEENGINE')) die("Hacking attempt!");
+
+/**
+ * forum_url() — Evrensel SEO Link Üretici
+ * SEO URL aktifse DLE motorunu, kapalıysa standart parametreli linki döner.
+ *
+ * Kullanım örnekleri:
+ *   forum_url('forum_main')
+ *   forum_url('forum_cat',   ['category' => $alt_name])
+ *   forum_url('forum_topic', ['newsid' => $id, 'news_name' => $slug, 'category' => $cat_alt])
+ *   forum_url('forum_user',  ['user' => $username])
+ *   forum_url('forum_pm_read', ['newsid' => $pm_id])
+ */
+function forum_url($rule, $params = []) {
+    global $config;
+
+    $mapping = [
+        'forum_main'          => '',
+        'forum_cat'           => '&action=category&cat='    . urlencode($params['category'] ?? ''),
+        'forum_topic'         => '&action=topic&id='        . intval($params['newsid'] ?? 0),
+        'forum_user'          => '&action=user_posts&user=' . urlencode($params['user'] ?? ''),
+        'forum_new_topic'     => '&action=new_topic',
+        'forum_search'        => '&action=search',
+        'forum_notifications' => '&action=notifications',
+        'forum_pm'            => '&action=pm',
+        'forum_pm_read'       => '&action=pm&sub=read&id='  . intval($params['newsid'] ?? 0),
+        'forum_ajax'          => '&action=ajax',
+    ];
+
+    if (empty($config['allow_alt_url']) || !class_exists('DLEUrl')) {
+        return $config['http_home_url'] . 'index.php?do=forum' . ($mapping[$rule] ?? '');
+    }
+
+    $url = DLEUrl::BuildUrl('custom.' . $rule, $params);
+    if (empty($url) || strpos($url, '{') !== false) {
+        return $config['http_home_url'] . 'index.php?do=forum' . ($mapping[$rule] ?? '');
+    }
+    return $url;
+}
+
+/**
+ * forum_fix_url() — Mevcut URL'e parametre ekler (& / ? otomatik seçer)
+ */
+function forum_fix_url($url, $param) {
+    if (empty($url)) return '';
+    $sep = (strpos($url, '?') === false) ? '?' : '&';
+    return $url . $sep . $param;
+}
+?>]]></replacecode>
+			<enabled>1</enabled>
+		</operation>
+	</file>
 </dleplugin>
