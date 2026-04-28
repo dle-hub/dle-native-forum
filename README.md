@@ -1,4 +1,3 @@
-İşte güncellenmiş ve GitHub’a README.md olarak ekleyebileceğin Markdown formatında doküman:
 
 ```markdown
 # DLE Native Forum – Ultimate Core v1.1.2
