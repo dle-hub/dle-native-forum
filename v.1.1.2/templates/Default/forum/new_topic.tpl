@@ -30,11 +30,12 @@
                 </div>
                 [/error]
 
-                <!-- Başlık Alanı (DÜZELTİLDİ: ID ve FOR eklendi) -->
                 <div class="df-form-group">
                     <label for="topic-title" class="df-form-label">Konu Başlığı</label>
                     <input type="text" id="topic-title" name="topic_title" value="{title_val}" class="df-input" placeholder="Konuyu açıklayıcı bir başlık yazın..." required>
                 </div>
+
+                {description_field}
 
                 <!-- Editör Alanı (DÜZELTİLDİ: for="comments" eklendi) -->
                 <div class="df-form-group">

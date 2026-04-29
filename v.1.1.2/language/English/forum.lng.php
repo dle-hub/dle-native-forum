@@ -83,6 +83,9 @@ $lang = array_merge((array)$lang, array(
     'forum_err_flood_topic' => 'You are creating topics too fast! Wait %d seconds.',
     'forum_err_flood_reply' => 'You are posting too fast! Wait %d seconds.',
     'forum_err_flood_like'  => 'You are liking too fast! Wait %d seconds.',
+    'err_flood_blocked'    => 'You have made too many requests! You need to wait 10 minutes.',
+    'err_flood_ip'         => 'Hourly request limit reached. Please wait.',
+    'err_flood_post'       => 'You are processing too fast! You need to wait %s seconds.',
 
     /* ───────── BUMP ───────── */
     'forum_err_bump_locked'    => 'Locked topics cannot be bumped!',

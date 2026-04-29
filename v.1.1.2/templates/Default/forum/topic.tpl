@@ -14,6 +14,7 @@
         <div class="df-topic-info">
             <span class="df-topic-label">KONU:</span>
             <h1 class="df-topic-title">{topic_title}</h1>
+            {topic_description}
         </div>
         <div class="df-topic-actions">
             {bump_btn}

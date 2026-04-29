@@ -527,8 +527,28 @@ a:hover { color: var(--df-accent-hover); }
 .df-post.df-post-op .df-post-user { background: rgba(245,158,11,.05); }
 
 /* Admin Bar */
-.df-admin-bar { background: #1e293b; color: #fff; padding: 8px 12px; border-radius: 4px; margin-bottom: 12px; font-size: 11px; text-transform: uppercase; display: flex; align-items: center; gap: 12px; }
-.df-admin-bar a { color: #cbd5e1; }
+.df-admin-bar { background: #1e293b; color: #fff; padding: 10px 16px; border-radius: 4px; margin-bottom: 16px; font-size: 11px; text-transform: uppercase; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.df-admin-label { font-weight: 800; color: var(--df-accent); margin-right: 5px; }
+.df-btn-mod {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #e2e8f0;
+    padding: 6px 12px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    
+}
+.df-btn-mod:hover { background: var(--df-accent); color: #000; border-color: var(--df-accent); }
+.df-btn-mod i { font-size: 12px; }
+
+.df-btn-mod-danger { border-color: rgba(239, 68, 68, 0.4); color: #f87171; }
+.df-btn-mod-danger:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
 .df-admin-bar a:hover { color: var(--df-accent); }
 
 /* Butonlar */

@@ -83,6 +83,9 @@ $lang = array_merge((array)$lang, array(
     'forum_err_flood_topic' => 'Çok hızlı konu açıyorsunuz! %d saniye bekleyin.',
     'forum_err_flood_reply' => 'Çok hızlı mesaj gönderiyorsunuz! %d saniye bekleyin.',
     'forum_err_flood_like'  => 'Çok hızlı beğeni yapıyorsunuz! %d saniye bekleyin.',
+    'err_flood_blocked'    => "Çok fazla işlem yaptınız! 10 dakika beklemeniz gerekiyor.",
+    'err_flood_ip'         => "Saatlik işlem limitine ulaştınız. Lütfen bekleyin.",
+    'err_flood_post'       => "Çok hızlı işlem yapıyorsunuz! %s saniye beklemeniz gerekiyor.",
 
     /* ───────── BUMP ───────── */
     'forum_err_bump_locked'    => 'Kilitli konu bump edilemez!',

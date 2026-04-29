@@ -65,9 +65,17 @@
             <div class="df-pill-body">
                 <span class="df-pill-label">AKTİF</span>
                 <span class="df-pill-sep">|</span>
-                <span class="df-pill-val">{online_count}</span>
+                <span class="df-pill-val">{online_total}</span>
             </div>
             <div class="df-pill-icon"><i class="fa fa-user"></i></div>
+        </div>
+        <div class="df-pill">
+            <div class="df-pill-body">
+                <span class="df-pill-label">BUGÜN</span>
+                <span class="df-pill-sep">|</span>
+                <span class="df-pill-val">{today_visitors}</span>
+            </div>
+            <div class="df-pill-icon"><i class="fa fa-eye"></i></div>
         </div>
     </div>
 
@@ -81,7 +89,7 @@
         <div class="df-info-body">
             <div class="df-info-row">
                 <strong>Kimler Çevrimiçi:</strong>
-                Toplam <strong>{online_count}</strong> kullanıcı aktif. Son Üye: <strong>{last_member}</strong>
+                Toplam <strong>{online_total}</strong> kullanıcı aktif (<strong>{online_members}</strong> Üye, <strong>{online_guests}</strong> Misafir). Bugün toplam <strong>{today_visitors}</strong> kişi uğradı. Son Üye: <strong>{last_member}</strong>
             </div>
         </div>
     </div>
