@@ -168,6 +168,8 @@ $lang = array_merge((array)$lang, array(
     'forum_reply_title' => 'Cevap Yaz',
     'forum_topic_locked_t' => 'Konu Kilitli',
 
+    'forum_js_mod_ok' => 'İşlem başarılı, sayfa yenileniyor...',
+    'forum_js_del_ok' => 'Konu silindi, foruma yönlendiriliyorsunuz.',
     /* ══════════════════════════════════════
        ADMIN PANELİ KELİMELERİ (inc/forum.php)
        ══════════════════════════════════════ */

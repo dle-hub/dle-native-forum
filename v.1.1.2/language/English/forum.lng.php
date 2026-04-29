@@ -168,6 +168,8 @@ $lang = array_merge((array)$lang, array(
     'forum_reply_title'       => 'Write a Reply',
     'forum_topic_locked_t'    => 'Topic Locked',
 
+    'forum_js_mod_ok' => 'Action successful, reloading page...',
+    'forum_js_del_ok' => 'Topic deleted, redirecting to forum.',
     /* ══════════════════════════════════════
        ADMIN PANEL WORDS (inc/forum.php)
        ══════════════════════════════════════ */

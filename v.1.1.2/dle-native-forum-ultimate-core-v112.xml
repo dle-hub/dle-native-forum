@@ -3953,9 +3953,9 @@ switch($action) {
                 
                 $html .= '<span class="tree-name"><i class="fa ' . $safe_icon . '" style="color:#64748b; margin-right:6px;"></i> ' . safe_out($cat['name']) . '<br><small style="font-weight:normal;color:#94a3b8;margin-left:24px;">' . safe_out($cat['description']) . '</small></span>';
                 $html .= '<span class="tree-meta">';
-                $html .= '<span class="badge bg-slate-100 text-slate-800" title="Konu Sayısı"><i class="fa fa-comments-o"></i> ' . intval($cat['topic_count']) . '</span>';
-                $html .= '<span class="badge bg-slate-100 text-slate-800" title="Mesaj Sayısı"><i class="fa fa-reply"></i> ' . intval($cat['post_count']) . '</span>';
-                $html .= '<span class="badge bg-teal-100 text-teal-800" title="Sıralama"><i class="fa fa-sort"></i> ' . intval($cat['posi']) . '</span>';
+                $html .= '<span class="badge bg-slate-100 text-slate-800" title="' . fl('forum_topics') . '"><i class="fa fa-comments-o"></i> ' . intval($cat['topic_count']) . '</span>';
+                $html .= '<span class="badge bg-slate-100 text-slate-800" title="' . fl('forum_posts') . '"><i class="fa fa-reply"></i> ' . intval($cat['post_count']) . '</span>';
+                $html .= '<span class="badge bg-teal-100 text-teal-800" title="' . fl('forum_adm_cat_order') . '"><i class="fa fa-sort"></i> ' . intval($cat['posi']) . '</span>';
                 $html .= '</span>';
                 
                 $html .= '<span class="tree-actions">';
@@ -5200,7 +5200,7 @@ function forumMod(action, state) {
     }).then(r => r.json()).then(d => {
         if(d.error) { forumToast(d.error, "error"); }
         else { 
-            forumToast("İşlem başarılı, sayfa yenileniyor...", "success");
+            forumToast("'.fl('forum_js_mod_ok').'", "success");
             setTimeout(() => location.reload(), 1000); 
         }
     });
@@ -5208,7 +5208,7 @@ function forumMod(action, state) {
 
 // Konu Silme AJAX Köprüsü
 function forumDeleteTopic() {
-    if(!confirm("Bu konuyu tamamen silmek istediğinize emin misiniz?")) return;
+    if(!confirm("'.fl('forum_confirm_del_topic').'")) return;
     
     fetch(FORUM_AJAX, {
         method: "POST",
@@ -5216,10 +5216,10 @@ function forumDeleteTopic() {
         body: "action=ajax&act=delete_topic&topic_id=" + FORUM_TOPIC + "&csrf=" + FORUM_CSRF
     }).then(r => r.json()).then(d => {
         if(d.success) {
-            forumToast("Konu silindi, foruma yönlendiriliyorsunuz.", "success");
+            forumToast("'.fl('forum_js_del_ok').'", "success");
             setTimeout(() => location.href = "index.php?do=forum", 1200);
         } else {
-            forumToast(d.error || "Hata oluştu", "error");
+            forumToast(d.error || "'.fl('forum_error').'", "error");
         }
     });
 }
@@ -5449,16 +5449,16 @@ $admin_toolbar = '';
 if ($is_logged && $Forum->canDo('moderate')) {
     $lock_val  = $topic['is_locked'] ? 0 : 1;
     $lock_icon = $topic['is_locked'] ? 'fa-unlock' : 'fa-lock';
-    $lock_text = $topic['is_locked'] ? 'Kilidi Aç' : 'Kilitle';
+    $lock_text = $topic['is_locked'] ? fl('forum_unlock') : fl('forum_lock');
     $pin_val   = $topic['is_pinned'] ? 0 : 1;
-    $pin_text  = $topic['is_pinned'] ? 'Sabitlemeyi Kaldır' : 'Sabitle';
+    $pin_text  = $topic['is_pinned'] ? fl('forum_unpin') : fl('forum_pin');
     $hash_cr   = $Forum->csrfToken();
 
     $admin_toolbar = '<div class="df-admin-bar">
-        <span class="df-admin-label"><i class="fa fa-shield"></i> YÖNETİM:</span>
+        <span class="df-admin-label"><i class="fa fa-shield"></i> ' . fl('forum_admin_label') . '</span>
         <button onclick="forumMod(\'lock_topic\', ' . $lock_val . ')" class="df-btn-mod"><i class="fa ' . $lock_icon . '"></i> ' . $lock_text . '</button>
         <button onclick="forumMod(\'pin_topic\', ' . $pin_val . ')" class="df-btn-mod"><i class="fa fa-thumb-tack"></i> ' . $pin_text . '</button>
-        <button onclick="forumDeleteTopic()" class="df-btn-mod df-btn-mod-danger"><i class="fa fa-trash"></i> Konuyu Sil</button>
+        <button onclick="forumDeleteTopic()" class="df-btn-mod df-btn-mod-danger"><i class="fa fa-trash"></i> ' . fl('forum_delete_topic') . '</button>
     </div>';
 }
 
