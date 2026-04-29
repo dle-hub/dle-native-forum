@@ -5,7 +5,7 @@
 **DataLife Engine 18.0+ için XenForo kalitesinde, %100 Native, SEO uyumlu ve yüksek performanslı forum eklentisi.**
 
 [![Sürüm](https://img.shields.io/badge/Sürüm-v1.1.2-0ea5e9?style=for-the-badge&logo=github)](https://github.com/dle-hub/dle-native-forum/tree/master/v.1.1.2)
-[![DLE Uyumluluk](https://img.shields.io/badge/DLE-18.0%2B-10b981?style=for-the-badge&logo=php)](https://dle-news.ru/)
+[![DLE Uyumluluk](https://img.shields.io/badge/DLE-18.0%2B-10b981?style=for-the-badge&logo=php)](https://dlehub.com.tr/)
 [![Geliştirici](https://img.shields.io/badge/Geliştirici-Dlehub_%26_Elegance-8b5cf6?style=for-the-badge)](https://dlehub.com.tr)
 
 [Özellikler](#-temel-özellikler) • [v1.1.2 Yenilikleri](#-v112-ile-gelen-yenilikler) • [Kurulum](#-kurulum) • [İletişim](#-destek-ve-iletişim)
