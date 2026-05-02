@@ -1,0 +1,455 @@
+<!--
+=======================================================
+  Bu dosya sadece DEĞİŞEN blokları içerir.
+  Orijinal XML'deki mysqlinstall, mysqlupgrade,
+  action dosyaları vs. aynen kalacak.
+  Sadece şu 6 şeyi değiştir:
+
+  1. <versioncompare> → >=
+  2. <phpinstall>
+  3. <phpupgrade>
+  4. <phpenable>
+  5. <phpdisable>
+  6. <phpdelete>
+  7. engine/forum/forum.helper.php (file operation)
+=======================================================
+-->
+
+<!-- ① versioncompare -->
+<versioncompare>>=</versioncompare>
+
+
+<!--
+=======================================================
+  ORTAK YARDIMCI FONKSİYON BLOĞU
+  phpinstall / phpupgrade / phpenable hepsi aynı
+  forum_seo_write() fonksiyonunu çağırır.
+  Bu sayede:
+  - Kod tekrarı yok
+  - Marker olmadan duplicate yazma riski yok
+  - Aynı sürüm üstüne güncelleme güvenli
+=======================================================
+-->
+
+<!-- ② phpinstall -->
+<phpinstall><![CDATA[
+function forum_seo_write() {
+
+    // ── DLE 19+: DLEUrl sistemi ──────────────────────────────────────────────
+    if (class_exists('DLEUrl')) {
+
+        $rules = [
+            'forum_main','forum_cat','forum_topic','forum_user',
+            'forum_new_topic','forum_search','forum_notifications',
+            'forum_pm','forum_pm_read','forum_ajax'
+        ];
+        foreach ($rules as $r) {
+            DLEUrl::DeleteRule('custom.' . $r);
+        }
+
+        DLEUrl::AddRule('forum_main',          '/forum/',                                     'index.php?do=forum');
+        DLEUrl::AddRule('forum_new_topic',     '/forum/new-topic/',                           'index.php?do=forum&action=new_topic');
+        DLEUrl::AddRule('forum_search',        '/forum/search/',                              'index.php?do=forum&action=search');
+        DLEUrl::AddRule('forum_notifications', '/forum/notifications/',                       'index.php?do=forum&action=notifications');
+        DLEUrl::AddRule('forum_pm',            '/forum/pm/',                                  'index.php?do=forum&action=pm');
+        DLEUrl::AddRule('forum_ajax',          '/forum/ajax/',                                'index.php?do=forum&action=ajax');
+        DLEUrl::AddRule('forum_user',          '/forum/user/{user}/',                         'index.php?do=forum&action=user_posts&user={user}');
+        DLEUrl::AddRule('forum_pm_read',       '/forum/pm/read/{newsid}/',                    'index.php?do=forum&action=pm&sub=read&id={newsid}');
+        DLEUrl::AddRule('forum_topic',         '/forum/{category}/{newsid}-{news_name}.html', 'index.php?do=forum&action=topic&id={newsid}');
+        DLEUrl::AddRule('forum_cat',           '/forum/{category}/',                          'index.php?do=forum&action=category&cat={category}');
+
+        if (is_array(DLEUrl::$rules)) {
+            $custom_rules = [];
+            $other_rules  = [];
+            foreach (DLEUrl::$rules as $k => $v) {
+                if (strpos($k, 'custom.forum_') === 0) $custom_rules[$k] = $v;
+                else $other_rules[$k] = $v;
+            }
+            DLEUrl::$rules = array_merge($custom_rules, $other_rules);
+            DLEUrl::SaveRules(DLEUrl::$rules);
+        }
+
+    // ── DLE 18: .htaccess mod_rewrite ────────────────────────────────────────
+    } else {
+
+        $htaccess_file  = ROOT_DIR . '/.htaccess';
+        $marker_start   = '# BEGIN DLE-Forum-SEO';
+        $marker_end     = '# END DLE-Forum-SEO';
+
+        $forum_block = $marker_start . '
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^forum/?$ index.php?do=forum [L,QSA]
+RewriteRule ^forum/new-topic/?$ index.php?do=forum&action=new_topic [L,QSA]
+RewriteRule ^forum/search/?$ index.php?do=forum&action=search [L,QSA]
+RewriteRule ^forum/notifications/?$ index.php?do=forum&action=notifications [L,QSA]
+RewriteRule ^forum/pm/?$ index.php?do=forum&action=pm [L,QSA]
+RewriteRule ^forum/pm/read/([0-9]+)/?$ index.php?do=forum&action=pm&sub=read&id=$1 [L,QSA]
+RewriteRule ^forum/ajax/?$ index.php?do=forum&action=ajax [L,QSA]
+RewriteRule ^forum/user/([^/]+)/?$ index.php?do=forum&action=user_posts&user=$1 [L,QSA]
+RewriteRule ^forum/([^/]+)/([0-9]+)-([^/]+)\.html$ index.php?do=forum&action=topic&id=$2 [L,QSA]
+RewriteRule ^forum/([^/]+)/?$ index.php?do=forum&action=category&cat=$1 [L,QSA]
+</IfModule>
+' . $marker_end;
+
+        // Mevcut htaccess'i oku (yoksa boş başla)
+        $current = file_exists($htaccess_file) ? file_get_contents($htaccess_file) : '';
+
+        // Marker'lı bloğu temizle (varsa — upgrade güvenliği)
+        $pattern = '/' . preg_quote($marker_start, '/') . '.*?' . preg_quote($marker_end, '/') . '\s*/s';
+        $current = preg_replace($pattern, '', $current);
+
+        // Marker'sız eski satırları da temizle (marker silinmiş kenar durum)
+        // forum/... RewriteRule satırlarını bul ve kaldır
+        $current = preg_replace('/^RewriteRule\s+\^forum\b.*$/m', '', $current);
+
+        // Boş satır birikimini temizle (3+ boş satır → 1 boş satır)
+        $current = preg_replace('/\n{3,}/', "\n\n", trim($current));
+
+        // Forum bloğunu en üste yaz (DLE'nin kendi kurallarından önce işlenmeli)
+        $new_content = $forum_block . "\n\n" . $current;
+        file_put_contents($htaccess_file, $new_content);
+    }
+}
+
+forum_seo_write();
+]]></phpinstall>
+
+
+<!-- ③ phpupgrade — install ile aynı fonksiyon, aynı güvenli yazım -->
+<phpupgrade><![CDATA[
+function forum_seo_write() {
+
+    if (class_exists('DLEUrl')) {
+
+        $rules = [
+            'forum_main','forum_cat','forum_topic','forum_user',
+            'forum_new_topic','forum_search','forum_notifications',
+            'forum_pm','forum_pm_read','forum_ajax'
+        ];
+        foreach ($rules as $r) {
+            DLEUrl::DeleteRule('custom.' . $r);
+        }
+
+        DLEUrl::AddRule('forum_main',          '/forum/',                                     'index.php?do=forum');
+        DLEUrl::AddRule('forum_new_topic',     '/forum/new-topic/',                           'index.php?do=forum&action=new_topic');
+        DLEUrl::AddRule('forum_search',        '/forum/search/',                              'index.php?do=forum&action=search');
+        DLEUrl::AddRule('forum_notifications', '/forum/notifications/',                       'index.php?do=forum&action=notifications');
+        DLEUrl::AddRule('forum_pm',            '/forum/pm/',                                  'index.php?do=forum&action=pm');
+        DLEUrl::AddRule('forum_ajax',          '/forum/ajax/',                                'index.php?do=forum&action=ajax');
+        DLEUrl::AddRule('forum_user',          '/forum/user/{user}/',                         'index.php?do=forum&action=user_posts&user={user}');
+        DLEUrl::AddRule('forum_pm_read',       '/forum/pm/read/{newsid}/',                    'index.php?do=forum&action=pm&sub=read&id={newsid}');
+        DLEUrl::AddRule('forum_topic',         '/forum/{category}/{newsid}-{news_name}.html', 'index.php?do=forum&action=topic&id={newsid}');
+        DLEUrl::AddRule('forum_cat',           '/forum/{category}/',                          'index.php?do=forum&action=category&cat={category}');
+
+        if (is_array(DLEUrl::$rules)) {
+            $custom_rules = [];
+            $other_rules  = [];
+            foreach (DLEUrl::$rules as $k => $v) {
+                if (strpos($k, 'custom.forum_') === 0) $custom_rules[$k] = $v;
+                else $other_rules[$k] = $v;
+            }
+            DLEUrl::$rules = array_merge($custom_rules, $other_rules);
+            DLEUrl::SaveRules(DLEUrl::$rules);
+        }
+
+    } else {
+
+        $htaccess_file  = ROOT_DIR . '/.htaccess';
+        $marker_start   = '# BEGIN DLE-Forum-SEO';
+        $marker_end     = '# END DLE-Forum-SEO';
+
+        $forum_block = $marker_start . '
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^forum/?$ index.php?do=forum [L,QSA]
+RewriteRule ^forum/new-topic/?$ index.php?do=forum&action=new_topic [L,QSA]
+RewriteRule ^forum/search/?$ index.php?do=forum&action=search [L,QSA]
+RewriteRule ^forum/notifications/?$ index.php?do=forum&action=notifications [L,QSA]
+RewriteRule ^forum/pm/?$ index.php?do=forum&action=pm [L,QSA]
+RewriteRule ^forum/pm/read/([0-9]+)/?$ index.php?do=forum&action=pm&sub=read&id=$1 [L,QSA]
+RewriteRule ^forum/ajax/?$ index.php?do=forum&action=ajax [L,QSA]
+RewriteRule ^forum/user/([^/]+)/?$ index.php?do=forum&action=user_posts&user=$1 [L,QSA]
+RewriteRule ^forum/([^/]+)/([0-9]+)-([^/]+)\.html$ index.php?do=forum&action=topic&id=$2 [L,QSA]
+RewriteRule ^forum/([^/]+)/?$ index.php?do=forum&action=category&cat=$1 [L,QSA]
+</IfModule>
+' . $marker_end;
+
+        $current = file_exists($htaccess_file) ? file_get_contents($htaccess_file) : '';
+        $pattern = '/' . preg_quote($marker_start, '/') . '.*?' . preg_quote($marker_end, '/') . '\s*/s';
+        $current = preg_replace($pattern, '', $current);
+        $current = preg_replace('/^RewriteRule\s+\^forum\b.*$/m', '', $current);
+        $current = preg_replace('/\n{3,}/', "\n\n", trim($current));
+        file_put_contents($htaccess_file, $forum_block . "\n\n" . $current);
+    }
+}
+
+forum_seo_write();
+]]></phpupgrade>
+
+
+<!-- ④ phpenable — install/upgrade ile tamamen aynı -->
+<phpenable><![CDATA[
+function forum_seo_write() {
+
+    if (class_exists('DLEUrl')) {
+
+        $rules = [
+            'forum_main','forum_cat','forum_topic','forum_user',
+            'forum_new_topic','forum_search','forum_notifications',
+            'forum_pm','forum_pm_read','forum_ajax'
+        ];
+        foreach ($rules as $r) {
+            DLEUrl::DeleteRule('custom.' . $r);
+        }
+
+        DLEUrl::AddRule('forum_main',          '/forum/',                                     'index.php?do=forum');
+        DLEUrl::AddRule('forum_new_topic',     '/forum/new-topic/',                           'index.php?do=forum&action=new_topic');
+        DLEUrl::AddRule('forum_search',        '/forum/search/',                              'index.php?do=forum&action=search');
+        DLEUrl::AddRule('forum_notifications', '/forum/notifications/',                       'index.php?do=forum&action=notifications');
+        DLEUrl::AddRule('forum_pm',            '/forum/pm/',                                  'index.php?do=forum&action=pm');
+        DLEUrl::AddRule('forum_ajax',          '/forum/ajax/',                                'index.php?do=forum&action=ajax');
+        DLEUrl::AddRule('forum_user',          '/forum/user/{user}/',                         'index.php?do=forum&action=user_posts&user={user}');
+        DLEUrl::AddRule('forum_pm_read',       '/forum/pm/read/{newsid}/',                    'index.php?do=forum&action=pm&sub=read&id={newsid}');
+        DLEUrl::AddRule('forum_topic',         '/forum/{category}/{newsid}-{news_name}.html', 'index.php?do=forum&action=topic&id={newsid}');
+        DLEUrl::AddRule('forum_cat',           '/forum/{category}/',                          'index.php?do=forum&action=category&cat={category}');
+
+        if (is_array(DLEUrl::$rules)) {
+            $custom_rules = [];
+            $other_rules  = [];
+            foreach (DLEUrl::$rules as $k => $v) {
+                if (strpos($k, 'custom.forum_') === 0) $custom_rules[$k] = $v;
+                else $other_rules[$k] = $v;
+            }
+            DLEUrl::$rules = array_merge($custom_rules, $other_rules);
+            DLEUrl::SaveRules(DLEUrl::$rules);
+        }
+
+    } else {
+
+        $htaccess_file  = ROOT_DIR . '/.htaccess';
+        $marker_start   = '# BEGIN DLE-Forum-SEO';
+        $marker_end     = '# END DLE-Forum-SEO';
+
+        $forum_block = $marker_start . '
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^forum/?$ index.php?do=forum [L,QSA]
+RewriteRule ^forum/new-topic/?$ index.php?do=forum&action=new_topic [L,QSA]
+RewriteRule ^forum/search/?$ index.php?do=forum&action=search [L,QSA]
+RewriteRule ^forum/notifications/?$ index.php?do=forum&action=notifications [L,QSA]
+RewriteRule ^forum/pm/?$ index.php?do=forum&action=pm [L,QSA]
+RewriteRule ^forum/pm/read/([0-9]+)/?$ index.php?do=forum&action=pm&sub=read&id=$1 [L,QSA]
+RewriteRule ^forum/ajax/?$ index.php?do=forum&action=ajax [L,QSA]
+RewriteRule ^forum/user/([^/]+)/?$ index.php?do=forum&action=user_posts&user=$1 [L,QSA]
+RewriteRule ^forum/([^/]+)/([0-9]+)-([^/]+)\.html$ index.php?do=forum&action=topic&id=$2 [L,QSA]
+RewriteRule ^forum/([^/]+)/?$ index.php?do=forum&action=category&cat=$1 [L,QSA]
+</IfModule>
+' . $marker_end;
+
+        $current = file_exists($htaccess_file) ? file_get_contents($htaccess_file) : '';
+        $pattern = '/' . preg_quote($marker_start, '/') . '.*?' . preg_quote($marker_end, '/') . '\s*/s';
+        $current = preg_replace($pattern, '', $current);
+        $current = preg_replace('/^RewriteRule\s+\^forum\b.*$/m', '', $current);
+        $current = preg_replace('/\n{3,}/', "\n\n", trim($current));
+        file_put_contents($htaccess_file, $forum_block . "\n\n" . $current);
+    }
+}
+
+forum_seo_write();
+]]></phpenable>
+
+
+<!-- ⑤ phpdisable — kuralları kaldır, dosya bütünlüğünü koru -->
+<phpdisable><![CDATA[
+function forum_seo_remove() {
+
+    if (class_exists('DLEUrl')) {
+
+        $rules = [
+            'forum_main','forum_cat','forum_topic','forum_user',
+            'forum_new_topic','forum_search','forum_notifications',
+            'forum_pm','forum_pm_read','forum_ajax'
+        ];
+        foreach ($rules as $r) {
+            DLEUrl::DeleteRule('custom.' . $r);
+        }
+
+    } else {
+
+        $htaccess_file = ROOT_DIR . '/.htaccess';
+        $marker_start  = '# BEGIN DLE-Forum-SEO';
+        $marker_end    = '# END DLE-Forum-SEO';
+
+        if (!file_exists($htaccess_file)) return;
+
+        $current = file_get_contents($htaccess_file);
+
+        // Marker'lı bloğu sil
+        $pattern = '/' . preg_quote($marker_start, '/') . '.*?' . preg_quote($marker_end, '/') . '\s*/s';
+        $current = preg_replace($pattern, '', $current);
+
+        // Markersız eski forum satırları kalmışsa onları da temizle
+        $current = preg_replace('/^RewriteRule\s+\^forum\b.*$/m', '', $current);
+
+        // Boş satır birikimini temizle
+        $current = preg_replace('/\n{3,}/', "\n\n", trim($current));
+
+        file_put_contents($htaccess_file, $current . "\n");
+    }
+}
+
+forum_seo_remove();
+]]></phpdisable>
+
+
+<!-- ⑥ phpdelete — disable ile aynı, ekstra temizlik yok -->
+<phpdelete><![CDATA[
+function forum_seo_remove() {
+
+    if (class_exists('DLEUrl')) {
+
+        $rules = [
+            'forum_main','forum_cat','forum_topic','forum_user',
+            'forum_new_topic','forum_search','forum_notifications',
+            'forum_pm','forum_pm_read','forum_ajax'
+        ];
+        foreach ($rules as $r) {
+            DLEUrl::DeleteRule('custom.' . $r);
+        }
+
+    } else {
+
+        $htaccess_file = ROOT_DIR . '/.htaccess';
+        $marker_start  = '# BEGIN DLE-Forum-SEO';
+        $marker_end    = '# END DLE-Forum-SEO';
+
+        if (!file_exists($htaccess_file)) return;
+
+        $current = file_get_contents($htaccess_file);
+        $pattern = '/' . preg_quote($marker_start, '/') . '.*?' . preg_quote($marker_end, '/') . '\s*/s';
+        $current = preg_replace($pattern, '', $current);
+        $current = preg_replace('/^RewriteRule\s+\^forum\b.*$/m', '', $current);
+        $current = preg_replace('/\n{3,}/', "\n\n", trim($current));
+        file_put_contents($htaccess_file, $current . "\n");
+    }
+}
+
+forum_seo_remove();
+]]></phpdelete>
+
+
+<!--
+=======================================================
+  ⑦ engine/forum/forum.helper.php
+  DLE 18 ve 19+ için çift uyumlu forum_url()
+=======================================================
+-->
+<file name="engine/forum/forum.helper.php">
+	<operation action="create">
+		<replacecode><![CDATA[<?php
+if (!defined('DATALIFEENGINE')) die("Hacking attempt!");
+
+/**
+ * forum_url() — DLE 18 / 19+ Çift Uyumlu SEO Link Üretici
+ *
+ * DLE 19+  → DLEUrl::BuildUrl() kullanır (FastRoute motoru)
+ * DLE 18   → .htaccess mod_rewrite kurallarına uygun URL üretir
+ * Fallback → Her iki durumda da parametreli URL döner (SEO kapalıysa)
+ *
+ * Kullanım:
+ *   forum_url('forum_main')
+ *   forum_url('forum_cat',   ['category' => $alt_name])
+ *   forum_url('forum_topic', ['newsid' => $id, 'news_name' => $slug, 'category' => $cat_alt])
+ *   forum_url('forum_user',  ['user' => $username])
+ *   forum_url('forum_pm_read', ['newsid' => $pm_id])
+ */
+function forum_url($rule, $params = []) {
+    global $config;
+
+    $base = rtrim($config['http_home_url'], '/') . '/';
+
+    // ── DLE 19+: DLEUrl sistemi ──────────────────────────────────────────────
+    if (class_exists('DLEUrl') && !empty($config['allow_alt_url'])) {
+        $url = DLEUrl::BuildUrl('custom.' . $rule, $params);
+        // BuildUrl başarısız olursa (kural yok, {placeholder} kaldıysa) fallback'e düş
+        if (!empty($url) && strpos($url, '{') === false) {
+            return $url;
+        }
+    }
+
+    // ── DLE 18 + .htaccess modu veya SEO aktif / DLEUrl fallback ─────────────
+    // SEO URL'leri aktifse (DLE 18'de $config['allow_alt_url'] == 1)
+    if (!empty($config['allow_alt_url'])) {
+        switch ($rule) {
+            case 'forum_main':
+                return $base . 'forum/';
+
+            case 'forum_cat':
+                $cat = isset($params['category']) ? urlencode($params['category']) : '';
+                return $base . 'forum/' . $cat . '/';
+
+            case 'forum_topic':
+                $newsid    = isset($params['newsid'])    ? intval($params['newsid'])    : 0;
+                $news_name = isset($params['news_name']) ? urlencode($params['news_name']) : 'konu';
+                $category  = isset($params['category'])  ? urlencode($params['category'])  : '';
+                // Kategori slug'ı olmadan da çalışsın
+                if ($category !== '') {
+                    return $base . 'forum/' . $category . '/' . $newsid . '-' . $news_name . '.html';
+                }
+                return $base . 'forum/konu/' . $newsid . '-' . $news_name . '.html';
+
+            case 'forum_user':
+                $user = isset($params['user']) ? urlencode($params['user']) : '';
+                return $base . 'forum/user/' . $user . '/';
+
+            case 'forum_new_topic':
+                return $base . 'forum/new-topic/';
+
+            case 'forum_search':
+                return $base . 'forum/search/';
+
+            case 'forum_notifications':
+                return $base . 'forum/notifications/';
+
+            case 'forum_pm':
+                return $base . 'forum/pm/';
+
+            case 'forum_pm_read':
+                $id = isset($params['newsid']) ? intval($params['newsid']) : 0;
+                return $base . 'forum/pm/read/' . $id . '/';
+
+            case 'forum_ajax':
+                return $base . 'forum/ajax/';
+        }
+    }
+
+    // ── Fallback: SEO kapalı — klasik parametreli URL ─────────────────────────
+    $query_map = [
+        'forum_main'          => '',
+        'forum_cat'           => '&action=category&cat='    . urlencode($params['category'] ?? ''),
+        'forum_topic'         => '&action=topic&id='        . intval($params['newsid'] ?? 0),
+        'forum_user'          => '&action=user_posts&user=' . urlencode($params['user'] ?? ''),
+        'forum_new_topic'     => '&action=new_topic',
+        'forum_search'        => '&action=search',
+        'forum_notifications' => '&action=notifications',
+        'forum_pm'            => '&action=pm',
+        'forum_pm_read'       => '&action=pm&sub=read&id='  . intval($params['newsid'] ?? 0),
+        'forum_ajax'          => '&action=ajax',
+    ];
+
+    return $config['http_home_url'] . 'index.php?do=forum' . ($query_map[$rule] ?? '');
+}
+
+/**
+ * forum_fix_url() — Mevcut URL'e parametre ekler (& / ? otomatik seçer)
+ */
+function forum_fix_url($url, $param) {
+    if (empty($url)) return '';
+    $sep = (strpos($url, '?') === false) ? '?' : '&';
+    return $url . $sep . $param;
+}
+?>]]></replacecode>
+		<enabled>1</enabled>
+	</operation>
+</file>
