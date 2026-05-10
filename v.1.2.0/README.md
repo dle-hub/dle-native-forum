@@ -1,4 +1,4 @@
-# 🏛️ DLE Native Forum — Ultimate Core (v1.2.5)
+# 🏛️ DLE Native Forum — Ultimate Core (v1.2.0)
 
 [![DLE Version](https://img.shields.io/badge/DLE-13.x--19.x-blue.svg)](https://dle-news.ru)
 [![License](https://img.shields.io/badge/License-Commercial-orange.svg)](#)
