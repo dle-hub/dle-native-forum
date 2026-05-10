@@ -1,0 +1,7 @@
+dle19_1/
+nul
+*.zip
+*.rar
+node_modules/
+.DS_Store
+Thumbs.db
