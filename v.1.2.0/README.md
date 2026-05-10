@@ -1,8 +1,8 @@
 # 🏛️ DLE Native Forum — Ultimate Core (v1.2.0)
 
-[![DLE Version](https://img.shields.io/badge/DLE-13.x--19.x-blue.svg)](https://dle-news.ru)
+[![DLE Version](https://img.shields.io/badge/DLE-19.x-blue.svg)](https://dle-news.ru)
+[![PHP](https://img.shields.io/badge/PHP-8.x-777bb4.svg)](https://php.net)
 [![License](https://img.shields.io/badge/License-Commercial-orange.svg)](#)
-[![PHP](https://img.shields.io/badge/PHP-7.4--8.x-777bb4.svg)](https://php.net)
 
 **DLE Native Forum**, DataLife Engine için geliştirilmiş, modern, hızlı ve tamamen şablon bazlı çalışan profesyonel bir forum eklentisidir. **Nexus Ultimate** tasarımıyla birlikte gelir ve premium forum deneyimi sunar.
 
