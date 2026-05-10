@@ -5,7 +5,7 @@
 	<icon>public/adminpanel/images/forum.png</icon>
 	<version>1.2.0</version>
 	<dleversion>19.0</dleversion>
-	<versioncompare>==</versioncompare>
+	<versioncompare>>=</versioncompare>
 	<upgradeurl></upgradeurl>
 	<filedelete>0</filedelete>
 	<needplugin></needplugin>
@@ -447,7 +447,7 @@ CREATE TABLE IF NOT EXISTS `{prefix}_forum_topic_tags` (
   KEY `tag_id` (`tag_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET={charset};
 
-INSERT IGNORE INTO `{prefix}_admin_sections` (`name`, `title`, `descr`, `icon`, `allow_groups`) VALUES ('forum', 'Forum Yönetimi', 'DLE Native Forum v1.1.2', 'forum.png', '1');
+INSERT IGNORE INTO `{prefix}_admin_sections` (`name`, `title`, `descr`, `icon`, `allow_groups`) VALUES ('forum', 'Forum Yönetimi', 'DLE Native Forum v1.2.0', 'forum.png', '1');
 
 CREATE TABLE IF NOT EXISTS `{prefix}_forum_visitors` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
