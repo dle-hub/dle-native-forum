@@ -59,9 +59,9 @@ Forum görünümünü tamamen CSS değişkenleri ile değiştirebilirsiniz. `for
 ## 📄 Dokümantasyon
 
 Tüm TPL etiketleri ve detaylı kullanım kılavuzu için dizindeki dokümanlara göz atabilirsiniz:
-- 🇹🇷 [Türkçe Doküman](v.1.2.0/forum_detay.md)
-- 🇺🇸 [English Documentation](v.1.2.0/forum_detay_en.md)
-- 🇷🇺 [Russian Documentation](v.1.2.0/forum_detay_ru.md)
+- 🇹🇷 [Türkçe Doküman](forum_detay.md)
+- 🇺🇸 [English Documentation](forum_detay_en.md)
+- 🇷🇺 [Russian Documentation](forum_detay_ru.md)
 
 ---
 

@@ -6,7 +6,7 @@
 	<version>1.1.1</version>
 	<dleversion>18.0</dleversion>
 	<versioncompare>greater</versioncompare>
-	<upgradeurl></upgradeurl>
+	<upgradeurl>https://raw.githubusercontent.com/dle-hub/dle-native-forum/master/release.json</upgradeurl>
 	<filedelete>0</filedelete>
 	<needplugin></needplugin>
 	<mnotice>0</mnotice>
@@ -716,6 +716,9 @@ elseif($sub_action == 'read' && isset($_GET['id'])) {
         );
         
         $messages_list = '';
+        if(!class_exists('HTMLPurifier_Config') && file_exists(ENGINE_DIR . '/classes/htmlpurifier/HTMLPurifier.auto.php')) {
+            include_once(DLEPlugins::Check(ENGINE_DIR . '/classes/htmlpurifier/HTMLPurifier.auto.php'));
+        }
         include_once(DLEPlugins::Check(ENGINE_DIR . '/classes/parse.class.php'));
         $parse = new ParseFilter();
         $parse->safe_mode = true;
@@ -727,7 +730,7 @@ elseif($sub_action == 'read' && isset($_GET['id'])) {
             $m_text = $parse->decodeBBCodes(stripslashes($m['content']), true, false);
             $m_date = date("d.m.Y H:i", $m['created_at']);
             $m_usr  = htmlspecialchars($m['name']);
-            $avatar = $m['foto'] ? rtrim($config['http_home_url'], '/') . '/uploads/fotos/' . $m['foto'] : rtrim($config['http_home_url'], '/') . '/templates/' . $config['skin'] . '/dleimages/noavatar.png';
+            $avatar = $m['foto'] ? rtrim($config['http_home_url'], '/') . '/' . $m['foto'] : rtrim($config['http_home_url'], '/') . '/templates/' . $config['skin'] . '/dleimages/noavatar.png';
             
             $messages_list .= '
             <div class="df-pm-read-item" style="border-bottom:1px solid #eee; padding:15px 0;">
@@ -781,7 +784,7 @@ else {
     } else {
         while($row = $db->get_row($pms)) {
             $unread_cls = $row['is_read'] ? '' : 'unread';
-            $pm_avatar  = $row['last_user_foto'] ? rtrim($config['http_home_url'], '/') . '/uploads/fotos/' . $row['last_user_foto'] : rtrim($config['http_home_url'], '/') . '/templates/' . $config['skin'] . '/dleimages/noavatar.png';
+            $pm_avatar  = $row['last_user_foto'] ? rtrim($config['http_home_url'], '/') . '/' . $row['last_user_foto'] : rtrim($config['http_home_url'], '/') . '/templates/' . $config['skin'] . '/dleimages/noavatar.png';
             $pm_from    = htmlspecialchars($row['last_user_name']);
             $pm_title   = stripslashes($row['subject']);
             $pm_date    = date("d.m.Y H:i", $row['updated_at']);
@@ -1006,7 +1009,7 @@ if(empty($parent_cats)) {
                     $lt_title = htmlspecialchars($lt['title']);
                     
                     // XSS Açığı Kapatıldı
-                    $lt_avatar = !empty($lt['last_user_avatar']) ? rtrim($config['http_home_url'], '/') . '/uploads/fotos/' . htmlspecialchars($lt['last_user_avatar']) : $noavatar;
+                    $lt_avatar = !empty($lt['last_user_avatar']) ? rtrim($config['http_home_url'], '/') . '/' . htmlspecialchars($lt['last_user_avatar']) : $noavatar;
                     
                     $last_post_html = '
                         <div class="df-last-post-wrap">
@@ -1160,7 +1163,7 @@ if(!empty($sub_forums)) {
             $lt_date_raw = $lt['last_post_date'] ?: $lt['date'];
             $lt_date  = (strtotime($lt_date_raw) > 0) ? date('d.m.Y H:i', strtotime($lt_date_raw)) : '-';
             $lt_title = htmlspecialchars($lt['title']);
-            $lt_avatar = !empty($lt['last_user_avatar']) ? rtrim($config['http_home_url'], '/') . '/uploads/fotos/' . htmlspecialchars($lt['last_user_avatar']) : $noavatar;
+            $lt_avatar = !empty($lt['last_user_avatar']) ? rtrim($config['http_home_url'], '/') . '/' . htmlspecialchars($lt['last_user_avatar']) : $noavatar;
             
             $last_post_html = '
                 <div class="df-last-post-wrap">
@@ -1231,7 +1234,7 @@ if(empty($topics)) {
 
         // DÜZELTME: XSS açığını kapatmak için htmlspecialchars eklendi
         $last_avatar = !empty($t['last_user_avatar']) 
-            ? rtrim($config['http_home_url'], '/') . '/uploads/fotos/' . htmlspecialchars($t['last_user_avatar']) 
+            ? rtrim($config['http_home_url'], '/') . '/' . htmlspecialchars($t['last_user_avatar']) 
             : $noavatar;
 
         // Durum İkonu
@@ -1369,7 +1372,7 @@ if(empty($topics)) {
         $last_date = ($last_date_raw && strtotime($last_date_raw) > 0) ? date('d.m.Y H:i', strtotime($last_date_raw)) : '-';
 
         $last_avatar = !empty($t['last_user_avatar']) 
-            ? rtrim($config['http_home_url'], '/') . '/uploads/fotos/' . htmlspecialchars($t['last_user_avatar'], ENT_QUOTES, 'UTF-8') 
+            ? rtrim($config['http_home_url'], '/') . '/' . htmlspecialchars($t['last_user_avatar'], ENT_QUOTES, 'UTF-8') 
             : $noavatar;
 
         $status_icon = '<i class="fa fa-comment-dots df-icon-muted"></i>';
@@ -2703,6 +2706,11 @@ switch ($action) {
         include_once (DLEPlugins::Check(ENGINE_DIR . '/forum/actions/notifications.php'));
         break;
 
+    // Kullanıcı Forum Mesajları
+    case 'user_posts':
+        include_once (DLEPlugins::Check(ENGINE_DIR . '/forum/actions/user_posts.php'));
+        break;
+
     // Beğeni, Bump, Takip, Silme gibi tüm AJAX işlemleri
     case 'ajax':
         include_once (DLEPlugins::Check(ENGINE_DIR . '/forum/actions/ajax.php'));
@@ -3532,6 +3540,8 @@ WFORM;
             'delete_post'      => '<span class="label bg-red">' . fl('forum_log_del_post') . '</span>',
             'edit_post_as_mod' => '<span class="label bg-purple">' . fl('forum_log_edit_mod') . '</span>',
             'edit_own_post'    => '<span class="label bg-slate">' . fl('forum_log_edit_own') . '</span>',
+            'move_topic'       => '<span class="label bg-blue">' . fl('forum_log_move') . '</span>',
+            'bump_topic'       => '<span class="label bg-indigo">' . fl('forum_log_bump') . '</span>',
         ];
 
         $H_TITLE = fl('forum_adm_logs_title');
@@ -4090,6 +4100,8 @@ if (isset($_GET['del_post']) && $is_logged) {
 // --- Parser Yükle ---
 if (!class_exists('HTMLPurifier_Config')) {
     include_once(DLEPlugins::Check(ENGINE_DIR . '/classes/htmlpurifier/HTMLPurifier.standalone.php'));
+} elseif(file_exists(ENGINE_DIR . '/classes/htmlpurifier/HTMLPurifier.auto.php')) {
+    include_once(DLEPlugins::Check(ENGINE_DIR . '/classes/htmlpurifier/HTMLPurifier.auto.php'));
 }
 include_once(DLEPlugins::Check(ENGINE_DIR . '/classes/parse.class.php'));
 
@@ -4448,7 +4460,7 @@ foreach ($posts as $idx => $p) {
         $p_updated = '';
     }
 
-    $p_avatar  = $p['avatar'] ? rtrim($config['http_home_url'], '/') . '/uploads/fotos/' . $p['avatar'] : $noavatar;
+    $p_avatar  = $p['avatar'] ? rtrim($config['http_home_url'], '/') . '/' . $p['avatar'] : $noavatar;
     $p_profile = $config['http_home_url'] . 'user/' . urlencode($p['username'] ? $p['username'] : fl('forum_guest')) . '/';
     $is_op     = ($is_first_page && $idx === 0);
 
@@ -4865,7 +4877,7 @@ if (!$forum_block) {
                 $safe_foto = '';
             }
         }
-        $avatar = ($safe_foto !== '') ? rtrim($config['http_home_url'], '/') . '/uploads/fotos/' . $safe_foto : $noavatar_path;
+        $avatar = ($safe_foto !== '') ? rtrim($config['http_home_url'], '/') . '/' . $safe_foto : $noavatar_path;
 
         $safe_link = $config['http_home_url'] . "index.php?do=forum&action=topic&id=" . $safe_id;
 
@@ -4900,6 +4912,159 @@ if (!$forum_block) {
 echo $forum_block;
 ?>
 ]]></replacecode>
+			<enabled>1</enabled>
+		</operation>
+	</file>
+	<file name="engine/modules/profile.php">
+		<operation action="before">
+			<searchcode><![CDATA[$tpl->set( '{usertitle}', stripslashes( $row['name'] ) );]]></searchcode>
+			<replacecode><![CDATA[
+	// --- Forum Bilgileri Entegrasyonu (v1.1.1) ---
+	$tpl->set( '{forum-post-count}', isset($row['forum_post_count']) ? intval($row['forum_post_count']) : 0 );
+	$tpl->set( '{forum-points}', isset($row['forum_points']) ? intval($row['forum_points']) : 0 );
+	
+	$forum_rank_html = '';
+	if(isset($row['forum_rank_id']) && intval($row['forum_rank_id']) > 0) {
+		$fr_row = $db->super_query("SELECT title, color, icon FROM " . PREFIX . "_forum_ranks WHERE id = '" . intval($row['forum_rank_id']) . "'");
+		if($fr_row) {
+			$rc = isset($fr_row['color']) ? $fr_row['color'] : '#475569';
+			$ri = isset($fr_row['icon']) ? $fr_row['icon'] : 'fa-user';
+			$rt = isset($fr_row['title']) ? $fr_row['title'] : '';
+			$forum_rank_html = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border" style="color:'.$rc.'; border-color:'.$rc.'30; background:'.$rc.'10"><i class="fa '.$ri.'"></i> '.htmlspecialchars($rt).'</span>';
+		}
+	}
+	$tpl->set( '{forum-rank}', $forum_rank_html );
+	// --- Forum Bilgileri Entegrasyonu ---
+]]></replacecode>
+			<enabled>1</enabled>
+		</operation>
+	</file>
+	<file name="engine/forum/actions/user_posts.php">
+		<operation action="create">
+			<replacecode><![CDATA[<?php
+if(!defined('DATALIFEENGINE')) die("Hacking attempt!");
+
+$user_name = isset($_GET['user']) ? urldecode($_GET['user']) : '';
+$user_name = preg_replace('/[^a-zA-Z0-9ğĞüÜşŞıİöÖçÇ\s\-_]/', '', $user_name);
+
+if(empty($user_name)) {
+    msgbox(fl('forum_error'), fl('forum_err_user_not_found'));
+    return;
+}
+
+$user_row = $db->super_query("SELECT user_id, name, foto FROM " . USERPREFIX . "_users WHERE name = '" . $db->safesql($user_name) . "'");
+
+if(!$user_row) {
+    msgbox(fl('forum_error'), fl('forum_err_user_not_found'));
+    return;
+}
+
+$user_id = intval($user_row['user_id']);
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$per_page = 20;
+$offset = ($page - 1) * $per_page;
+
+$base_url = rtrim($config['http_home_url'], '/') . '/';
+$noavatar = $base_url . 'templates/' . $config['skin'] . '/dleimages/noavatar.png';
+$user_avatar = !empty($user_row['foto']) ? $base_url . $user_row['foto'] : $noavatar;
+
+// Toplam mesaj sayısı
+$total_posts = $db->super_query("SELECT COUNT(*) as c FROM " . PREFIX . "_forum_posts WHERE user_id = '$user_id' AND is_deleted = '0'");
+$total_count = intval($total_posts['c']);
+
+// Konuları ve mesajları birlikte çek
+$posts = $db->super_query(
+    "SELECT p.id, p.text, p.date, p.topic_id, t.title as topic_title, t.cat_id, c.name as cat_name
+     FROM " . PREFIX . "_forum_posts p
+     LEFT JOIN " . PREFIX . "_forum_topics t ON t.id = p.topic_id
+     LEFT JOIN " . PREFIX . "_forum_cats c ON c.id = t.cat_id
+     WHERE p.user_id = '$user_id' AND p.is_deleted = '0'
+     ORDER BY p.date DESC
+     LIMIT $offset, $per_page",
+    true
+);
+
+$posts_html = '';
+
+if(empty($posts)) {
+    $posts_html = '<div class="df-empty">' . fl('forum_no_user_posts') . '</div>';
+} else {
+    foreach($posts as $p) {
+        $p_id = intval($p['id']);
+        $p_topic_id = intval($p['topic_id']);
+        $p_date = date('d.m.Y H:i', strtotime($p['date']));
+        $p_title = htmlspecialchars($p['topic_title'] ?: fl('forum_deleted_topic'));
+        $p_cat = htmlspecialchars($p['cat_name'] ?: '-');
+        $p_text = mb_strimwidth(strip_tags(html_entity_decode($p['text'], ENT_QUOTES, 'UTF-8')), 0, 200, '...');
+        $p_text = htmlspecialchars($p_text);
+        
+        $posts_html .= '
+        <div class="card mb-2" style="border: 1px solid #e6e7eb;">
+            <div class="card-body py-2 px-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <a href="' . $config['http_home_url'] . 'index.php?do=forum&action=topic&id=' . $p_topic_id . '#post-' . $p_id . '" class="font-weight-bold" style="font-size: 14px;">' . $p_title . '</a>
+                        <small class="text-muted d-block">' . $p_cat . ' • ' . $p_date . '</small>
+                        <p class="mt-1 mb-0 text-muted" style="font-size: 12px;">' . $p_text . '</p>
+                    </div>
+                    <a href="' . $config['http_home_url'] . 'index.php?do=forum&action=topic&id=' . $p_topic_id . '#post-' . $p_id . '" class="btn btn-xs btn-outline-primary" style="border-radius: 15px;">
+                        <i class="fa fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>';
+    }
+}
+
+// Sayfalama
+$total_pages = ceil($total_count / $per_page);
+$pagination = '';
+if($total_pages > 1) {
+    $pagination = '<div class="text-center mt-3">';
+    for($i = 1; $i <= $total_pages; $i++) {
+        $active = ($i == $page) ? 'btn-primary' : 'btn-outline-primary';
+        $pagination .= '<a href="?do=forum&action=user_posts&user=' . urlencode($user_name) . '&page=' . $i . '" class="btn btn-sm ' . $active . ' mr-1" style="border-radius: 15px;">' . $i . '</a>';
+    }
+    $pagination .= '</div>';
+}
+
+$tpl->load_template('forum/user_posts.tpl');
+
+if(!isset($tpl->result['user_posts_tpl']) || empty($tpl->result['user_posts_tpl'])) {
+    // Eğer şablon dosyası yoksa varsayılan HTML oluştur
+    $output = '
+    <div class="container mt-4">
+        <div class="card mb15">
+            <div class="card-body text-center">
+                <img src="' . $user_avatar . '" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;">
+                <h5>' . htmlspecialchars($user_name) . '</h5>
+                <span class="badge badge-primary">Toplam Mesaj: ' . $total_count . '</span>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <i class="fa fa-comments"></i> Forum Mesajları (' . $total_count . ')
+            </div>
+            <div class="card-body">
+                ' . $posts_html . '
+                ' . $pagination . '
+            </div>
+        </div>
+    </div>';
+    
+    $tpl->result['content'] = $output;
+} else {
+    $tpl->set('{user_name}', htmlspecialchars($user_name));
+    $tpl->set('{user_avatar}', $user_avatar);
+    $tpl->set('{total_posts}', $total_count);
+    $tpl->set('{posts_list}', $posts_html);
+    $tpl->set('{pagination}', $pagination);
+    $tpl->compile('content');
+}
+
+$tpl->clear();
+$metatags['title'] = htmlspecialchars($user_name) . ' - Forum Mesajları';
+?>]]></replacecode>
 			<enabled>1</enabled>
 		</operation>
 	</file>

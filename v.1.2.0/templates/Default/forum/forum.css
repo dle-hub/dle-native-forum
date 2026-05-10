@@ -1,0 +1,422 @@
+/* =============================================================
+   DLE Native Forum - Nexus Ultimate Master CSS (v1.3.0)
+   Full Legacy Support + Premium Nexus Design
+   ============================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+:root {
+    --df-accent: #3b82f6;
+    --df-accent-hover: #2563eb;
+    --df-success: #22c55e;
+    --df-danger: #ef4444;
+    --df-warning: #f59e0b;
+    --df-navy: #0f172a;
+    --df-dark: #1e293b;
+    --df-orange: #f97316;
+    --df-text-main: #1e293b;
+    --df-text-muted: #64748b;
+    --df-border: #e2e8f0;
+    --df-bg-page: #f1f5f9;
+    --df-bg-card: #ffffff;
+    --df-radius: 12px;
+    --df-radius-sm: 8px;
+    --df-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --df-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --df-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---- RESET & BASE (Nexus Integrated) ---- */
+body {
+    background-color: var(--df-bg-page);
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(249, 115, 22, 0.05) 0px, transparent 50%);
+    background-attachment: fixed;
+}
+
+.df-container, .df-page-wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 30px 20px;
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--df-text-main);
+    line-height: 1.5;
+}
+
+.df-container a, .df-page-wrap a { color: var(--df-accent); text-decoration: none; transition: var(--transition); }
+.df-container a:hover, .df-page-wrap a:hover { color: var(--df-accent-hover); }
+
+/* ---- BREADCRUMB (Nexus Style) ---- */
+.df-breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--df-text-muted);
+    background: linear-gradient(to right, #ffffff, #f8fafc);
+    padding: 12px 24px;
+    border-radius: var(--df-radius);
+    border: 1px solid var(--df-border);
+    box-shadow: var(--df-shadow-sm);
+    margin-bottom: 24px;
+}
+
+/* ---- CARDS ---- */
+.df-card, .df-category-block, .df-stats-box, .df-info-block {
+    background: var(--df-bg-card);
+    border: 1px solid var(--df-border);
+    border-radius: var(--df-radius);
+    box-shadow: var(--df-shadow-sm);
+    margin-bottom: 20px;
+    transition: var(--transition);
+}
+
+.df-card-header, .df-cat-head, .df-stats-header, .df-info-head {
+    background: var(--df-navy);
+    color: #fff;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: none;
+    border-radius: var(--df-radius) var(--df-radius) 0 0;
+}
+
+.df-info-head { background: var(--df-orange); }
+
+.df-card-title, .df-cat-title, .df-stats-title, .df-info-head-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #fff !important;
+}
+
+/* ---- LIST ROWS (Nexus Grid Style) ---- */
+.df-list-header {
+    display: grid;
+    grid-template-columns: 60px 1fr 180px 240px;
+    padding: 14px 24px;
+    background: var(--df-navy);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.df-row, .df-forum-row, .df-topic-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 180px 240px;
+    padding: 20px 24px;
+    background: #fff;
+    border-bottom: 1px solid var(--df-border);
+    align-items: center;
+    transition: var(--transition);
+}
+
+.df-row:hover, .df-forum-row:hover, .df-topic-row:hover { background: #f8fafc; }
+
+.df-col-icon { display: flex; justify-content: center; align-items: center; }
+.df-forum-icon, .df-icon-box {
+    width: 44px; height: 44px; 
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); 
+    color: var(--df-accent);
+    display: flex; align-items: center; justify-content: center; 
+    border-radius: 12px; font-size: 20px;
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.1);
+}
+
+.df-row-title, .df-title-link { font-size: 16px; font-weight: 700; color: var(--df-navy); text-decoration: none; display: block; margin-bottom: 4px; letter-spacing: -0.01em; }
+.df-row-desc, .df-desc-text { font-size: 13.5px; color: var(--df-text-muted); line-height: 1.5; }
+
+/* ---- STATS COLUMNS ---- */
+.df-col-stats { display: flex; align-items: center; justify-content: center; border-left: 1px solid var(--df-border); border-right: 1px solid var(--df-border); }
+.df-stats-inner { display: flex; gap: 20px; }
+.df-stat-count, .df-stat-num { text-align: center; min-width: 50px; }
+.df-stat-count strong, .df-stat-num { font-size: 18px; font-weight: 800; color: var(--df-navy); display: block; line-height: 1; margin-bottom: 4px; }
+.df-stat-count span, .df-stat-num small { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--df-text-muted); letter-spacing: 0.05em; }
+
+/* ---- LAST POST COLUMN ---- */
+.df-col-last { padding-left: 20px; border-left: 1px solid var(--df-border); }
+.df-last-post-box, .df-last-post-wrap { display: flex; align-items: center; gap: 14px; }
+.df-last-avatar { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; border: 2px solid #fff; box-shadow: var(--df-shadow-sm); }
+.df-last-post-info, .df-last-info { overflow: hidden; }
+.df-last-post-title, .df-last-title { font-size: 13px; font-weight: 700; color: var(--df-navy); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.df-last-post-meta, .df-last-meta { font-size: 11px; color: var(--df-text-muted); }
+
+/* ---- POSTS (Topic View) ---- */
+.df-post {
+    display: flex;
+    background: #fff;
+    border-radius: var(--df-radius);
+    box-shadow: var(--df-shadow-sm);
+    margin-bottom: 24px;
+    overflow: hidden;
+    border: 1px solid var(--df-border);
+}
+
+.df-post-user {
+    width: 240px;
+    background: #f8fafc;
+    border-right: 1px solid var(--df-border);
+    padding: 30px 20px;
+    text-align: center;
+}
+
+.df-avatar { width: 110px; height: 110px; border-radius: 24px; border: 4px solid #fff; box-shadow: var(--df-shadow-md); object-fit: cover; margin-bottom: 15px; }
+.df-post-username { font-size: 20px; font-weight: 800; color: var(--df-navy); text-decoration: none; display: block; margin-bottom: 10px; }
+
+.df-user-badge { padding: 5px 14px; border-radius: 30px; font-size: 11px; font-weight: 800; color: #fff; text-transform: uppercase; margin-bottom: 15px; display: inline-block; }
+
+.df-user-meta-list, .df-user-stats { text-align: left; font-size: 12px; padding-top: 18px; border-top: 1px dashed var(--df-border); margin-top: 10px; }
+.df-meta-item { display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--df-text-muted); }
+.df-meta-val { font-weight: 800; color: var(--df-navy); }
+
+.df-post-main { flex: 1; padding: 30px; display: flex; flex-direction: column; min-width: 0; }
+.df-post-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--df-text-muted); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--df-border); }
+.df-post-content { flex: 1; font-size: 15px; line-height: 1.8; color: #334155; }
+.df-post-footer { margin-top: 30px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--df-border); padding-top: 20px; }
+
+/* ---- BUTTONS (Nexus Styled) ---- */
+.df-btn, .df-btn-submit, .df-btn-primary, .df-btn-new-topic {
+    padding: 12px 24px; border-radius: var(--df-radius-sm); font-size: 14px; font-weight: 700;
+    text-transform: uppercase; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+    transition: var(--transition); cursor: pointer; border: none; background: var(--df-accent); color: #fff !important;
+}
+.df-btn:hover, .df-btn-submit:hover, .df-btn-primary:hover { background: var(--df-accent-hover); transform: translateY(-1px); box-shadow: var(--df-shadow-md); }
+
+/* ---- QUOTES & HIDE ---- */
+.quote { background: #f8fafc; border-left: 4px solid var(--df-accent); padding: 16px 20px; margin: 20px 0; border-radius: 0 8px 8px 0; font-style: italic; }
+.title_quote { font-weight: 800; font-size: 12px; color: var(--df-accent); margin-bottom: 8px; display: block; text-transform: uppercase; }
+
+.df-hide-content { background: #fffbeb !important; border-left: 4px solid var(--df-orange) !important; padding: 18px !important; border-radius: 8px !important; margin: 15px 0 !important; color: #92400e !important; }
+.dlehidden { background: #f8fafc !important; border: 1px dashed #cbd5e1 !important; padding: 25px !important; text-align: center !important; border-radius: 12px !important; color: #64748b !important; }
+
+/* ---- FOOTER STATS (Nexus Cards) ---- */
+.df-footer-counters, .df-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-top: 30px; }
+.df-counter-card, .df-stat-item { background: var(--df-navy); color: #fff; padding: 24px; border-radius: var(--df-radius); display: flex; justify-content: space-between; align-items: center; transition: var(--transition); }
+.df-counter-card:hover { transform: translateY(-5px); box-shadow: var(--df-shadow-lg); }
+.df-counter-info span, .df-stat-label { display: block; font-size: 11px; font-weight: 700; opacity: 0.6; text-transform: uppercase; }
+.df-counter-info strong, .df-stat-num-big { font-size: 28px; font-weight: 800; }
+.df-counter-card i { font-size: 28px; opacity: 0.3; }
+
+/* ---- INFO BOXES (Refined) ---- */
+.df-info-box {
+    border: 1px solid var(--df-border);
+    border-radius: var(--df-radius);
+    overflow: hidden;
+    background: #fff;
+    margin-top: 24px;
+    box-shadow: var(--df-shadow-sm);
+}
+
+.df-info-head {
+    background: var(--df-orange);
+    color: #fff;
+    padding: 14px 20px;
+    font-weight: 800;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.df-info-body {
+    padding: 20px 24px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--df-text-main);
+}
+
+.df-info-body a {
+    color: var(--df-orange);
+    font-weight: 700;
+}
+
+/* ---- DROPDOWNS (Nexus Style) ---- */
+.df-dropdown-wrap { position: relative; display: inline-block; }
+.df-dropdown-menu {
+    position: absolute; top: 100%; right: 0; z-index: 1000;
+    display: none; min-width: 200px; padding: 8px 0; margin-top: 8px;
+    background: #fff; border: 1px solid var(--df-border);
+    border-radius: var(--df-radius-sm); box-shadow: var(--df-shadow-lg);
+    animation: df-fade-in 0.2s ease;
+}
+.df-dropdown-wrap:hover .df-dropdown-menu { display: block; }
+.df-dropdown-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 20px;
+    font-size: 13px; font-weight: 600; color: var(--df-text-main); text-decoration: none;
+    transition: var(--transition);
+}
+.df-dropdown-item:hover { background: #f8fafc; color: var(--df-accent); }
+.df-dropdown-divider { height: 1px; background: var(--df-border); margin: 6px 0; }
+
+.df-btn-follow.active { background: var(--df-orange) !important; border-color: var(--df-orange) !important; color: #fff !important; }
+
+@keyframes df-fade-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ---- POST LAYOUT REFINEMENTS ---- */
+.df-post-user { width: 180px !important; padding: 25px 15px !important; flex-shrink: 0; }
+.df-avatar-box { position: relative; display: inline-block; }
+.df-avatar { width: 90px !important; height: 90px !important; border-radius: 20px !important; border: 4px solid #fff; box-shadow: var(--df-shadow-md); object-fit: cover; }
+.df-post-username { font-size: 17px !important; font-weight: 800 !important; display: block; margin-top: 10px; text-decoration: none; }
+.df-user-badge { padding: 4px 10px !important; font-size: 10px !important; font-weight: 800 !important; border-radius: 4px; color: #fff; text-transform: uppercase; margin-bottom: 12px !important; display: inline-block; }
+.df-user-meta-list { text-align: left; margin-top: 15px; }
+.df-meta-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px !important; font-size: 11px !important; color: var(--df-text-muted); }
+.df-meta-val { font-weight: 800; color: var(--df-navy); }
+
+/* ---- REACTION BUTTONS ---- */
+.df-post-reactions { display: flex; gap: 8px; }
+.df-react-btn { 
+    display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 30px; 
+    font-size: 12px; font-weight: 700; border: 1px solid var(--df-border); 
+    background: #fff; color: var(--df-text-muted); transition: var(--transition); cursor: pointer;
+}
+.df-react-btn:hover { background: #f1f5f9; transform: scale(1.05); }
+.df-react-btn.active { color: #fff; border-color: transparent; }
+.df-react-like.active { background: var(--df-accent); }
+.df-react-dislike.active { background: var(--df-danger); }
+
+/* ---- TOPIC HEADER (Nexus Premium) ---- */
+.df-topic-header-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-left: 4px solid var(--df-accent);
+    padding: 30px !important;
+}
+
+.df-topic-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.df-topic-title {
+    margin: 0;
+    font-size: 28px !important;
+    font-weight: 800;
+    color: var(--df-navy);
+    letter-spacing: -0.02em;
+}
+
+.df-topic-desc {
+    margin-top: 10px !important;
+    font-size: 15px !important;
+    color: var(--df-text-muted);
+    max-width: 800px;
+}
+
+.df-topic-status-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.df-status-pinned { background: #fef3c7; color: #d97706; }
+.df-status-locked { background: #fee2e2; color: #dc2626; }
+
+.df-btn-outline {
+    background: #fff !important;
+    color: var(--df-text-main) !important;
+    border: 1px solid var(--df-border) !important;
+    box-shadow: var(--df-shadow-sm);
+}
+.df-btn-outline:hover {
+    background: #f8fafc !important;
+    border-color: var(--df-accent) !important;
+    color: var(--df-accent) !important;
+}
+
+.df-tag-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: #f1f5f9;
+    color: #475569;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition);
+    border: 1px solid transparent;
+}
+.df-tag-item:hover {
+    background: #fff;
+    color: var(--df-accent);
+    border-color: var(--df-accent);
+    transform: translateY(-1px);
+}
+.df-tag-item i { font-size: 10px; opacity: 0.6; }
+
+.df-notif-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    background: var(--df-danger);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 10px;
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    border: 2px solid #fff;
+}
+
+/* ---- UPLOAD ZONE ---- */
+.df-upload-zone { border: 2px dashed var(--df-border); padding: 15px; border-radius: 8px; background: #f8fafc; }
+.df-custom-upload input[type="file"] { font-size: 13px; color: var(--df-text-muted); }
+
+/* ---- LEGACY & SPECIAL SUPPORT (v1.1.3+) ---- */
+.df-subcats-list { margin-top: 15px; font-size: 11.5px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: #f8fafc; padding: 10px 15px; border-radius: 8px; border: 1px solid var(--df-border); }
+.df-subcats-label { font-weight: 800; color: var(--df-navy); text-transform: uppercase; margin-right: 5px; opacity: 0.7; }
+.df-subcat-link { background: #fff; padding: 3px 12px; border-radius: 20px; color: var(--df-accent); font-weight: 700; text-decoration: none; transition: 0.2s; border: 1px solid var(--df-border); box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+.df-subcat-link:hover { border-color: var(--df-accent); background: var(--df-accent); color: #fff; transform: translateY(-1px); }
+
+.df-prefix { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-right: 8px; background: var(--df-navy); color: #fff; }
+.df-tag { display: inline-block; font-size: 11px; padding: 4px 10px; border-radius: 20px; background: #e2e8f0; color: #475569; margin: 0 4px 4px 0; text-decoration: none; transition: 0.2s; }
+.df-tag:hover { background: var(--df-accent); color: #fff; }
+
+.df-online-status { position: absolute; bottom: 5px; right: 5px; width: 16px; height: 16px; border-radius: 50%; border: 3px solid #fff; z-index: 5; }
+.df-online-status.is-online { background: var(--df-success); }
+.df-online-status.is-offline { background: #cbd5e1; }
+
+/* ---- MOBİL MUCİZİ (Restored from v1.1.3) ---- */
+@media screen and (max-width: 992px) {
+    .df-row, .df-forum-row, .df-topic-row, .df-list-header {
+        grid-template-columns: 50px 1fr !important;
+        gap: 0 !important;
+    }
+    .df-col-stats, .df-col-last, .df-list-header > div:nth-child(3), .df-list-header > div:nth-child(4) { display: none !important; }
+    .df-col-main { padding: 0 15px !important; }
+    
+    .df-post { flex-direction: column; }
+    .df-post-user { width: 100%; border-right: none; border-bottom: 1px solid var(--df-border); display: flex; align-items: center; gap: 20px; text-align: left; padding: 20px; }
+    .df-avatar { width: 70px; height: 70px; margin-bottom: 0; }
+    .df-user-meta-list { display: none; }
+}
+
+@media screen and (max-width: 640px) {
+    .df-container { padding: 15px; }
+    .df-footer-counters { grid-template-columns: 1fr 1fr; }
+    .df-counter-card strong { font-size: 20px; }
+    .df-search-wrapper { flex-direction: column; }
+}

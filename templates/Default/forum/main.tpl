@@ -18,9 +18,9 @@
                 <p class="df-main-subtitle">Tartışın, Paylaşın, Öğrenin.</p>
             </div>
         </div>
-        
+
         <div class="df-main-header-actions">
-            
+
             <form action="{SITEURL}index.php" method="get" class="df-search-form">
                 <input type="hidden" name="do" value="forum">
                 <input type="hidden" name="action" value="search">
@@ -83,7 +83,7 @@
         <div class="df-info-body">
             <div class="df-info-row">
                 <strong>Kimler Çevrimiçi:</strong>
-                Toplam <strong>{online_count}</strong> kullanıcı aktif. Son Üye: <strong>{last_member}</strong>
+                Toplam <strong>{online_count}</strong> kullanıcı aktif. Son Üye: <strong><a href="{last_member_url}">{last_member_name}</a></strong>
             </div>
         </div>
     </div>

@@ -5,7 +5,7 @@
 	<icon>public/adminpanel/images/forum.png</icon>
 	<version>1.1.2</version>
 	<dleversion>18.0</dleversion>
-	<versioncompare>greaterorequal</versioncompare>
+	<versioncompare>==</versioncompare>
 	<upgradeurl></upgradeurl>
 	<filedelete>0</filedelete>
 	<needplugin></needplugin>
@@ -3702,6 +3702,19 @@ if(isset($_POST['save_action'])) {
         }
     }
 
+    // ---- SIRALAMA KAYDET ----
+    if($save == 'save_cat_order') {
+        if(isset($_POST['cat_order']) && is_array($_POST['cat_order'])) {
+            foreach($_POST['cat_order'] as $cid => $cpos) {
+                $cid = intval($cid);
+                $cpos = intval($cpos);
+                $db->query("UPDATE " . PREFIX . "_forum_cats SET posi='$cpos' WHERE id='$cid'");
+            }
+            clear_cache("forum_cats_0");
+            msg("info", fl('forum_success'), "Sıralama başarıyla güncellendi!", "?mod=forum&action=cats");
+        }
+    }
+
     // ---- RÜTBE KAYDET ----
     if($save == 'save_rank') {
         $rank_id    = intval($_POST['rank_id']);
@@ -3955,17 +3968,12 @@ switch($action) {
                 $html .= '<span class="tree-meta">';
                 $html .= '<span class="badge bg-slate-100 text-slate-800" title="' . fl('forum_topics') . '"><i class="fa fa-comments-o"></i> ' . intval($cat['topic_count']) . '</span>';
                 $html .= '<span class="badge bg-slate-100 text-slate-800" title="' . fl('forum_posts') . '"><i class="fa fa-reply"></i> ' . intval($cat['post_count']) . '</span>';
-                $html .= '<span class="badge bg-teal-100 text-teal-800" title="' . fl('forum_adm_cat_order') . '"><i class="fa fa-sort"></i> ' . intval($cat['posi']) . '</span>';
+                $html .= '<input type="number" name="cat_order[' . intval($cat['id']) . ']" value="' . intval($cat['posi']) . '" title="Sıralama (Küçük sayı üstte çıkar)" style="width:45px; height:24px; text-align:center; border:1px solid #cbd5e1; border-radius:4px; margin-left:8px; font-size:12px;">';
                 $html .= '</span>';
                 
                 $html .= '<span class="tree-actions">';
                 $html .= '<a href="?mod=forum&action=cats&edit=' . intval($cat['id']) . '" class="btn btn-xs btn-primary btn-raised"><i class="fa fa-pencil"></i></a>';
-                $html .= '<form method="post" style="display:inline" onsubmit="return confirm(\'' . $L_CONFIRM . '\')">';
-                $html .= $csrf_input;
-                $html .= '<input type="hidden" name="save_action" value="delete_cat">';
-                $html .= '<input type="hidden" name="cat_id" value="' . intval($cat['id']) . '">';
-                $html .= '<button type="submit" class="btn btn-xs btn-danger btn-raised"><i class="fa fa-trash"></i></button>';
-                $html .= '</form>';
+                $html .= '<button type="button" onclick="deleteCat(' . intval($cat['id']) . ', \\\'' . htmlspecialchars($L_CONFIRM, ENT_QUOTES) . '\\\' )" class="btn btn-xs btn-danger btn-raised" title="Sil"><i class="fa fa-trash"></i></button>';
                 $html .= '</span>';
                 
                 $html .= '</div>';
@@ -3986,19 +3994,34 @@ switch($action) {
 
         echo <<<CSS
         <style>
-        .forum-tree { list-style:none; padding-left:0; margin:0; }
-        .forum-tree ul { list-style:none; padding-left:30px; border-left:1px dashed #cbd5e1; margin-left:12px; }
-        .forum-tree li { position:relative; margin-top:4px; }
-        .forum-tree .tree-toggle { cursor:pointer; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; color:#64748b; font-size:12px; transition:transform .2s; }
-        .forum-tree .tree-toggle.expanded { transform:rotate(90deg); }
-        .forum-tree .tree-children { display:none; }
-        .forum-tree .tree-children.open { display:block; }
-        .forum-tree .tree-row { display:flex; align-items:center; padding:10px 15px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; transition:all 0.2s; }
-        .forum-tree .tree-row:hover { background:#f8fafc; border-color:#cbd5e1; }
-        .forum-tree .tree-name { flex:1; font-weight:600; font-size:14px; color:#334155; }
-        .forum-tree .tree-meta { display:flex; gap:8px; font-size:12px; align-items:center; }
-        .forum-tree .tree-actions { display:flex; gap:4px; margin-left:15px; }
-        </style>
+.forum-tree { list-style:none; padding-left:0; margin:0; }
+.forum-tree ul { list-style:none; padding-left:30px; border-left:1px dashed #cbd5e1; margin-left:12px; }
+.forum-tree li { position:relative; margin-top:4px; }
+.forum-tree .tree-toggle { cursor:pointer; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; color:#64748b; font-size:12px; transition:transform .2s; }
+.forum-tree .tree-toggle.expanded { transform:rotate(90deg); }
+.forum-tree .tree-children { display:none; }
+.forum-tree .tree-children.open { display:block; }
+.forum-tree .tree-row { display:flex; align-items:center; padding:10px 15px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; transition:all 0.2s; }
+.forum-tree .tree-row:hover { background:#f8fafc; border-color:#cbd5e1; }
+.forum-tree .tree-name { flex:1; font-weight:600; font-size:14px; color:#334155; }
+.forum-tree .tree-meta { display:flex; gap:8px; font-size:12px; align-items:center; }
+.forum-tree .tree-actions { display:flex; gap:4px; margin-left:15px; }
+
+/* --- MOBİL DÜZELTME (Eklenecek Kısım) --- */
+@media (max-width: 768px) {
+    .forum-tree ul { padding-left: 12px; margin-left: 6px; } /* Girintiyi daralt */
+    .forum-tree .tree-row { 
+        flex-direction: column; /* Elemanları alt alta diz */
+        align-items: flex-start; 
+        padding: 8px; 
+    }
+    .forum-tree .tree-name { width: 100%; margin-bottom: 8px; font-size: 13px; }
+    .forum-tree .tree-meta { width: 100%; justify-content: space-between; border-top: 1px solid #f1f5f9; pt: 8px; }
+    .forum-tree .tree-actions { margin-left: 0; margin-top: 10px; width: 100%; justify-content: flex-end; }
+    .forum-tree .tree-toggle { position: absolute; right: 10px; top: 10px; } /* Ok ikonunu köşeye çek */
+}
+</style>
+
 CSS;
 
         echo '<div class="panel panel-default">';
@@ -4007,7 +4030,12 @@ CSS;
         echo '<div class="panel-body" style="background:#f1f5f9; padding:20px;">';
         
         if ($total_cats > 0) {
+            echo '<form method="post">';
+            echo $csrf_input;
+            echo '<input type="hidden" name="save_action" value="save_cat_order">';
             echo '<ul class="forum-tree">' . renderCatTree($cat_tree, $csrf_input, $L_CONFIRM) . '</ul>';
+            echo '<div style="margin-top:15px; text-align:right;"><button type="submit" class="btn bg-teal btn-raised"><i class="fa fa-sort position-left"></i> Sıralamayı Kaydet</button></div>';
+            echo '</form>';
         } else {
             echo '<div class="alert alert-info">Hiç kategori bulunamadı.</div>';
         }
@@ -4021,16 +4049,29 @@ CSS;
             var ul = el.parentElement.nextElementSibling;
             if (ul) ul.classList.toggle('open');
         }
+        function deleteCat(id, msg) {
+            if(confirm(msg)) {
+                document.getElementById('delete_cat_id').value = id;
+                document.getElementById('delete_cat_form').submit();
+            }
+        }
         </script>
 JS;
+        // Gizli silme formu - iç içe form sorununu önler
+        echo '<form id="delete_cat_form" method="post" style="display:none;">';
+        echo $csrf_input;
+        echo '<input type="hidden" name="save_action" value="delete_cat">';
+        echo '<input type="hidden" name="cat_id" id="delete_cat_id" value="">';
+        echo '</form>';
+
 
         if(isset($_GET['add']) || $edit_cat) {
             $f = $edit_cat ? $edit_cat : ['id'=>0,'parent_id'=>0,'name'=>'','alt_name'=>'','description'=>'','icon'=>'fa-folder','posi'=>0];
             
-            $build_opts = function($parent_id = 0, $level = 0) use (&$cats, &$build_opts, $f) {
+            $build_opts = function($parent_id = 0, $level = 0) use (&$all_cats, &$build_opts, $f) {
                 $html = '';
                 $prefix = str_repeat('&nbsp;&nbsp;&nbsp;↳ ', $level);
-                foreach($cats as $c) {
+                foreach($all_cats as $c) {
                     if($c['parent_id'] == $parent_id) {
                         if ($f['id'] > 0 && $f['id'] == $c['id']) continue; 
                         
@@ -4042,6 +4083,7 @@ JS;
                 return $html;
             };
             $cats_opts = $build_opts(0, 0);
+
             
             $form_title   = $f['id'] > 0 ? fl('forum_adm_cat_edit') : fl('forum_adm_cat_new');
             $L_CAT_NAME   = fl('forum_adm_cat_name');
@@ -4820,8 +4862,7 @@ echo <<<HTML
 HTML;
 
 echofooter();
-?>
-]]></replacecode>
+?>]]></replacecode>
 			<enabled>1</enabled>
 		</operation>
 	</file>
