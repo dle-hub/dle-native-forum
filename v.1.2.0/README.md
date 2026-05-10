@@ -28,9 +28,7 @@
    - DLE Admin Paneli -> **Eklentiler** (Plugins) bölümüne gidin.
    - **Eklenti Yükle** butonuna tıklayın.
    - Size verilen `dle-native-forum-ultimate-core-v120.zip` dosyasını seçip yükleyin.
-2. **Dosya İzinleri**:
-   - `/engine/forum/` dizininin yazılabilir olduğundan emin olun.
-3. **Tema Ayarları**:
+2. **Tema Ayarları**:
    - Eklenti ile gelen `templates/Default/forum/` klasörünü kendi tema klasörünüzün içine kopyalayın.
 
 ---
