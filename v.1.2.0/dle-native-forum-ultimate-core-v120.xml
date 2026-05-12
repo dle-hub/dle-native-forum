@@ -6312,34 +6312,31 @@ HTML;
         );
         showRow(
             fl("forum_set_topics_per_page"),
-            fl(
-                "forum_set_topics_per_page_desc",
-                "Sayfa basina gosterilecek mesaj sayisi",
-            ),
+            fl("forum_set_topics_per_page_desc"),
             '<input type="text" class="form-control" style="max-width:10.42em; text-align: center;" name="topics_per_page" value="' .
                 $v("topics_per_page", "25") .
                 '">',
         );
         showRow(
             fl("forum_set_guest_view"),
-            fl("forum_set_guest_view_desc", "Misafirler forumu gorebilsin mi?"),
+            fl("forum_set_guest_view_desc"),
             makeCheckBox("allow_guests_view", $v("allow_guests_view", "1")),
         );
         showRow(
-            fl("forum_set_allow_member_edit", "Üye Mesaj Düzenleme"),
-            fl("forum_set_allow_member_edit_desc", "Üyeler kendi yazdıkları mesajları düzenleyebilsin mi? Kapalıysa yalnızca Admin ve Editör düzenleyebilir."),
+            fl("forum_set_allow_member_edit"),
+            fl("forum_set_allow_member_edit_desc"),
             makeCheckBox("allow_member_edit", $v("allow_member_edit", "1")),
         );
         showRow(
             fl("forum_set_min_post"),
-            fl("forum_set_min_post_desc", "Minimum mesaj karakter sayisi"),
+            fl("forum_set_min_post_desc"),
             '<input type="text" class="form-control" style="max-width:10.42em; text-align: center;" name="min_post_length" value="' .
                 $v("min_post_length", "10") .
                 '">',
         );
         showRow(
             fl("forum_set_max_post"),
-            fl("forum_set_max_post_desc", "Maksimum mesaj karakter sayisi"),
+            fl("forum_set_max_post_desc"),
             '<input type="text" class="form-control" style="max-width:10.42em; text-align: center;" name="max_post_length" value="' .
                 $v("max_post_length", "10000") .
                 '">',
