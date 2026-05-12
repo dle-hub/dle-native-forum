@@ -5,7 +5,7 @@
 	<icon>public/adminpanel/images/forum.png</icon>
 	<version>1.2.0</version>
 	<dleversion>19.0</dleversion>
-	<versioncompare>>=</versioncompare>
+	<versioncompare>greater</versioncompare>
 	<upgradeurl></upgradeurl>
 	<filedelete>0</filedelete>
 	<needplugin></needplugin>
@@ -901,6 +901,7 @@ $tpl->set('{notif_content}', $notif_html);
 $tpl->set('{SITEURL}',       $config['http_home_url']);
 $tpl->set('{forum_url}',     forum_url('forum_main'));
 $tpl->set('{breadcrumb}',    $Forum->getBreadcrumb(0, 0, fl('forum_notifications')));
+$tpl->set('{forum_js_vars}', $Forum->getJsVars());
 $tpl->compile('content');
 $tpl->clear();
 
@@ -1009,6 +1010,7 @@ $tpl->set('{today_visitors}', intval($today_visitors['total_visitors']));
 $tpl->set('{last_member}', htmlspecialchars($stats['last_user']['name'] ?: '-'));
 $tpl->set('{breadcrumb}', $Forum->getBreadcrumb());
 $tpl->set('{SITEURL}', $config['http_home_url']);
+$tpl->set('{forum_js_vars}', $Forum->getJsVars());
 
 if($is_logged) {
     $tpl->set_block("'\\[is-logged\\](.*?)\\[/is-logged\\]'si", "\\1");
@@ -1171,6 +1173,7 @@ if($is_logged) {
     $tpl->set_block("'\\[is-logged\\](.*?)\\[/is-logged\\]'si", "");
     $tpl->set_block("'\\[not-logged\\](.*?)\\[/not-logged\\]'si", "\\1");
 }
+$tpl->set('{forum_js_vars}', $Forum->getJsVars());
 
 $tpl->compile('content');
 $tpl->clear();
@@ -1366,6 +1369,7 @@ foreach(($all_cats ?: []) as $fc) {
  $tpl->set('{filter_date_from}',  $filter_date_from > 0 ? date('Y-m-d', $filter_date_from) : '');
  $tpl->set('{filter_date_to}',    $filter_date_to > 0 ? date('Y-m-d', $filter_date_to) : '');
  $tpl->set('{search_url}',        forum_url('forum_search'));
+ $tpl->set('{forum_js_vars}', $Forum->getJsVars());
  $tpl->compile('content');
  $tpl->clear();
  $metatags['title'] = fl('forum_search') . ': ' . htmlspecialchars($q, ENT_QUOTES, 'UTF-8') . ' - ' . fl('forum_forum');
@@ -2124,19 +2128,39 @@ class Forum {
      * Girdiyi ParseFilter::process() veya BB_Parse() ile sanitize eder.
      */
     public function sanitizeInput($text) {
-        global $config;
+        global $config, $user_group, $member_id;
         if(!class_exists('ParseFilter')) {
             include_once(DLEPlugins::Check(ENGINE_DIR . '/classes/parse.class.php'));
         }
-        $parse = new ParseFilter();
-        $parse->safe_mode = true;
-        $parse->wysiwyg = (isset($config['allow_comments_wysiwyg']) && $config['allow_comments_wysiwyg'] == 1);
         
-        if($parse->wysiwyg) {
-            $text = $parse->process($text);
-        } else {
-            $text = $parse->BB_Parse($text, false);
-        }
+        // DLE Core addcomments.php:24-38 — Forum editörü HER ZAMAN TinyMCE (WYSIWYG) kullanıyor
+        // Bu yüzden allowed_tags ile ParseFilter oluşturulmalı ki HTMLPurifier HTML'i silmesin
+        $allowed_tags = array(
+            'dlehide[class|data-allowed-groups|contenteditable]',
+            'div[align|style|class|data-commenttime|data-commentuser|data-commentid|data-commentpostid|data-commentgast|contenteditable]',
+            'span[style|class|data-userurl|data-username|contenteditable]',
+            'p[align|style|class]', 'pre[class]', 'code', 'br', 'strong', 'em',
+            'ul', 'li', 'ol', 'b', 'u', 'i', 's', 'hr'
+        );
+        
+        $allow_url   = $user_group[$member_id['user_group']]['allow_url'] ?? true;
+        $allow_image = $user_group[$member_id['user_group']]['allow_image'] ?? true;
+        
+        if($allow_url)   $allowed_tags[] = 'a[href|target|style|class|title]';
+        if($allow_image)  $allowed_tags[] = 'img[style|class|src|srcset|alt|width|height]';
+        
+        $parse = new ParseFilter($allowed_tags);
+        $parse->wysiwyg = true;
+        $parse->safe_mode = true;
+        $parse->remove_html = false;
+        $parse->allow_url   = $allow_url;
+        $parse->allow_image = $allow_image;
+        $parse->allow_video = $user_group[$member_id['user_group']]['video_comments'] ?? false;
+        $parse->allow_media = $user_group[$member_id['user_group']]['media_comments'] ?? false;
+        
+        // DLE Core addcomments.php:155 — process() + BB_Parse() 
+        $text = $parse->BB_Parse($parse->process(trim($text)));
+        
         return $text;
     }
 
@@ -2506,7 +2530,13 @@ class Forum {
         if(!$post) return ['error' => fl('forum_err_post_not_found')];
 
         $own = $post['user_id'] == $this->getUserId();
-        if(!$own && !$this->canDo('moderate')) return ['error' => fl('forum_err_no_permission')];
+        $is_mod = $this->canDo('moderate');
+
+        // Admin paneli: üyeler kendi mesajlarını düzenleyebilsin mi?
+        $allow_member_edit = intval($this->getSetting('allow_member_edit') ?? 1);
+        if(!$allow_member_edit && !$is_mod) return ['error' => fl('forum_err_no_edit_perm', 'Bu mesajı düzenleme yetkiniz yok!')];
+
+        if(!$own && !$is_mod) return ['error' => fl('forum_err_no_permission')];
 
         $new_text = $this->sanitizeInput($new_text);
         if(mb_strlen(strip_tags(html_entity_decode($new_text, ENT_QUOTES, 'UTF-8'))) < 10) return ['error' => fl('forum_err_post_short')];
@@ -3402,14 +3432,27 @@ class Forum {
         $safe_base_url = htmlspecialchars($base_url, ENT_QUOTES, 'UTF-8');
         $sep = (strpos($safe_base_url, '?') === false) ? '?' : '&';
 
-        $html  = '<ul class="pagination pagination-sm no-margin">';
-        if($current > 1) $html .= '<li><a href="' . $safe_base_url . $sep . 'page=' . ($current-1) . '">«</a></li>';
-        for($i = 1; $i <= $pages; $i++) {
-            $active = $i == $current ? 'class="active"' : '';
-            $html  .= "<li $active><a href=\"{$safe_base_url}{$sep}page={$i}\">{$i}</a></li>";
+        $html = '<div class="df-pagination">';
+        
+        if($current > 1) {
+            $html .= '<a href="' . $safe_base_url . $sep . 'page=' . ($current-1) . '" class="df-page-prev"><i class="fa fa-angle-left"></i></a>';
         }
-        if($current < $pages) $html .= '<li><a href="' . $safe_base_url . $sep . 'page=' . ($current+1) . '">»</a></li>';
-        $html .= '</ul>';
+
+        $range = 2; 
+        for($i = 1; $i <= $pages; $i++) {
+            if($i == 1 || $i == $pages || ($i >= $current - $range && $i <= $current + $range)) {
+                $active = ($i == $current) ? 'active' : '';
+                $html .= '<a href="' . $safe_base_url . $sep . 'page=' . $i . '" class="df-page-item ' . $active . '">' . $i . '</a>';
+            } elseif ($i == $current - $range - 1 || $i == $current + $range + 1) {
+                $html .= '<span class="df-page-dots">...</span>';
+            }
+        }
+
+        if($current < $pages) {
+            $html .= '<a href="' . $safe_base_url . $sep . 'page=' . ($current+1) . '" class="df-page-next"><i class="fa fa-angle-right"></i></a>';
+        }
+
+        $html .= '</div>';
         return $html;
     }
 
@@ -3879,23 +3922,38 @@ switch($act) {
         jout($Forum->rejectPost(intval($_POST['post_id'] ?? 0)));
         break;
     case 'get_post':
-        $post_id = intval($_POST['post_id'] ?? 0);
+        $post_id = intval($_POST['post_id'] ?? $_POST['id'] ?? 0);
+        if(!$post_id) jout(['error' => fl('forum_err_post_not_found')]);
         $row = $db->super_query(
             "SELECT p.text, p.user_id, p.is_deleted, p.is_approved 
              FROM " . PREFIX . "_forum_posts p 
-             WHERE p.id='{$post_id}'"
+             WHERE p.id='{$post_id}' AND p.is_deleted='0'"
         );
         if(!$row) jout(['error' => fl('forum_err_post_not_found')]);
-        
-        // Yetki kontrolü
+
+        // Alıntı modu: sadece giriş yapmış olmak yeterli, ek yetki gerekmez
+        $mode = isset($_POST['mode']) ? $_POST['mode'] : 'edit';
+        if($mode === 'quote') {
+            jout(['success' => true, 'text' => $row['text']]);
+        }
+
+        // Düzenleme modu: kendi mesajı mı veya moderatör mü?
         $is_own = ($row['user_id'] == $member_id['user_id']);
-        if(!$is_own && !$Forum->canDo('moderate')) {
-            jout(['error' => fl('forum_err_no_edit_perm')]);
+        $is_mod = $Forum->canDo('moderate');
+
+        // Admin paneli ayarından üye düzenleme yetkisi kontrolü
+        $allow_member_edit = intval($Forum->getSetting('allow_member_edit') ?? 1);
+        if(!$allow_member_edit && !$is_mod) {
+            jout(['error' => fl('forum_err_no_edit_perm', 'Bu mesajı düzenleme yetkiniz yok!')]);
         }
-        if($row['is_deleted'] || !$row['is_approved']) {
-            jout(['error' => fl('forum_err_no_edit_time')]);
+
+        if(!$is_own && !$is_mod) {
+            jout(['error' => fl('forum_err_no_edit_perm', 'Bu mesajı düzenleme yetkiniz yok!')]);
         }
-        
+        if(!$is_mod && !$row['is_approved']) {
+            jout(['error' => fl('forum_err_no_edit_time', 'Onaylanmamış mesaj düzenlenemez.')]);
+        }
+
         jout(['success' => true, 'text' => $row['text']]);
         break;
     default:
@@ -4358,6 +4416,7 @@ if (isset($_POST["save_action"])) {
             "forum_meta_desc",
             "forum_meta_desc_len",
             "quote_depth",
+            "allow_member_edit",
         ];
 
         foreach ($settings_list as $f) {
@@ -6267,6 +6326,11 @@ HTML;
             makeCheckBox("allow_guests_view", $v("allow_guests_view", "1")),
         );
         showRow(
+            fl("forum_set_allow_member_edit", "Üye Mesaj Düzenleme"),
+            fl("forum_set_allow_member_edit_desc", "Üyeler kendi yazdıkları mesajları düzenleyebilsin mi? Kapalıysa yalnızca Admin ve Editör düzenleyebilir."),
+            makeCheckBox("allow_member_edit", $v("allow_member_edit", "1")),
+        );
+        showRow(
             fl("forum_set_min_post"),
             fl("forum_set_min_post_desc", "Minimum mesaj karakter sayisi"),
             '<input type="text" class="form-control" style="max-width:10.42em; text-align: center;" name="min_post_length" value="' .
@@ -7821,7 +7885,15 @@ if(isset($_POST['submit_reply']) && $is_logged) {
                     if(!empty($_FILES['forum_file']['name'][0])) {
                         $Forum->handleUpload($edit_pid, $topic_id);
                     }
-                    header("Location: " . forum_url('forum_topic', ['newsid' => $topic_id]) . "#post-" . $edit_pid); exit; 
+                    // Düzenleme sonrası doğru sayfaya yönlendir
+                    $_ppp = intval($Forum->getSetting('posts_per_page') ?: 20);
+                    $_pos = intval($db->super_query("SELECT COUNT(*) as c FROM " . PREFIX . "_forum_posts WHERE topic_id='{$topic_id}' AND is_deleted='0' AND is_approved='1' AND id <= '{$edit_pid}'")['c']);
+                    $_page = max(1, ceil($_pos / $_ppp));
+                    $_base_url = forum_url('forum_topic', ['newsid' => $topic_id]);
+                    if($_page > 1) {
+                        $_base_url .= (strpos($_base_url, '?') !== false ? '&' : '?') . 'page=' . $_page;
+                    }
+                    header("Location: " . $_base_url . "#post-" . $edit_pid); exit;
                 }
             } else {
                 $result = $Forum->addReply($topic_id, $content);
@@ -7832,7 +7904,15 @@ if(isset($_POST['submit_reply']) && $is_logged) {
                     if(!empty($_FILES['forum_file']['name'][0])) {
                         $Forum->handleUpload($result['post_id'], $topic_id);
                     }
-                    header("Location: " . forum_url('forum_topic', ['newsid' => $topic_id]) . "#post-" . $result['post_id']); exit; 
+                    // Yanıt sonrası son sayfaya yönlendir (sayfa 1'e değil)
+                    $_ppp = intval($Forum->getSetting('posts_per_page') ?: 20);
+                    $_total = intval($db->super_query("SELECT COUNT(*) as c FROM " . PREFIX . "_forum_posts WHERE topic_id='{$topic_id}' AND is_deleted='0' AND is_approved='1'")['c']);
+                    $_last_page = max(1, ceil($_total / $_ppp));
+                    $_base_url = forum_url('forum_topic', ['newsid' => $topic_id]);
+                    if($_last_page > 1) {
+                        $_base_url .= (strpos($_base_url, '?') !== false ? '&' : '?') . 'page=' . $_last_page;
+                    }
+                    header("Location: " . $_base_url . "#post-" . $result['post_id']); exit;
                 }
             }
         }
@@ -7895,9 +7975,10 @@ if(!empty($ranks_cache)) {
 }
 
 $posts_html = '';
-$tpl->load_template('forum/blocks/post_row.tpl');
 
 foreach(($posts ?: []) as $idx => $p) {
+    $tpl->load_template('forum/blocks/post_row.tpl');
+    $_post_row_tpl = $tpl->template; // post_row.tpl içeriğini sakla
     $p_id  = intval($p['id']);
     $p_uid = intval($p['user_id']);
     $p_user = htmlspecialchars($p['username'] ?: fl('forum_guest'), ENT_QUOTES, 'UTF-8');
@@ -7952,24 +8033,7 @@ foreach(($posts ?: []) as $idx => $p) {
         $r_color = '#64748b';
     }
 
-    if(!empty($r_title)) {
-        $tpl->set('{rank_title}', htmlspecialchars($r_title));
-        $tpl->set('{rank_icon}',  htmlspecialchars($r_icon));
-        $tpl->set('{rank_color}', htmlspecialchars($r_color));
-        $tpl->set_block("'\\[has-rank\\](.*?)\\[/has-rank\\]'si", "\\1");
-
-        if (preg_match('/\.(gif|png|jpe?g|webp|svg)$/i', $r_icon)) {
-            $tpl->set_block("'\\[is-img-rank\\](.*?)\\[/is-img-rank\\]'si", "\\1");
-            $tpl->set_block("'\\[is-fa-rank\\](.*?)\\[/is-fa-rank\\]'si", "");
-        } else {
-            $tpl->set_block("'\\[is-img-rank\\](.*?)\\[/is-img-rank\\]'si", "");
-            $tpl->set_block("'\\[is-fa-rank\\](.*?)\\[/is-fa-rank\\]'si", "\\1");
-        }
-    } else {
-        $tpl->set_block("'\\[has-rank\\](.*?)\\[/has-rank\\]'si", "");
-        $tpl->set_block("'\\[is-img-rank\\](.*?)\\[/is-img-rank\\]'si", "");
-        $tpl->set_block("'\\[is-fa-rank\\](.*?)\\[/is-fa-rank\\]'si", "");
-    }
+    // Rank set_block'ları attachment sonrasına taşındı (attachment compile _clear() yapar)
 
     $group_id    = intval($p['user_group']);
     $group_name  = $user_group[$group_id]['group_name'] ?? fl('forum_member');
@@ -8010,7 +8074,28 @@ foreach(($posts ?: []) as $idx => $p) {
         $tpl->set_block("'\\[has-files\\](.*?)\\[/has-files\\]'si", $files_html ? "\\1" : "");
         $tpl->compile('attachments_wrap_block');
         $atts_html = $tpl->result['attachments_wrap_block'];
-        $tpl->load_template('forum/blocks/post_row.tpl');
+        // Attachment compile'dan sonra _clear() post_row template'ini bozar;
+        // kaydettiğimiz içeriği geri yükleyelim
+        $tpl->template = $tpl->copy_template = $_post_row_tpl;
+    }
+
+    // === RANK SET_BLOCK (attachment'dan sonra, restore edilmiş template üzerinde) ===
+    if(!empty($r_title)) {
+        $tpl->set('{rank_title}', htmlspecialchars($r_title));
+        $tpl->set('{rank_icon}',  htmlspecialchars($r_icon));
+        $tpl->set('{rank_color}', htmlspecialchars($r_color));
+        $tpl->set_block("'\\[has-rank\\](.*?)\\[/has-rank\\]'si", "\\1");
+        if (preg_match('/\.(gif|png|jpe?g|webp|svg)$/i', $r_icon)) {
+            $tpl->set_block("'\\[is-img-rank\\](.*?)\\[/is-img-rank\\]'si", "\\1");
+            $tpl->set_block("'\\[is-fa-rank\\](.*?)\\[/is-fa-rank\\]'si", "");
+        } else {
+            $tpl->set_block("'\\[is-img-rank\\](.*?)\\[/is-img-rank\\]'si", "");
+            $tpl->set_block("'\\[is-fa-rank\\](.*?)\\[/is-fa-rank\\]'si", "\\1");
+        }
+    } else {
+        $tpl->set_block("'\\[has-rank\\](.*?)\\[/has-rank\\]'si", "");
+        $tpl->set_block("'\\[is-img-rank\\](.*?)\\[/is-img-rank\\]'si", "");
+        $tpl->set_block("'\\[is-fa-rank\\](.*?)\\[/is-fa-rank\\]'si", "");
     }
     $p_rep   = intval($p['forum_total_likes'] ?? 0);
     $rep_pct = $p_rep > 0 ? min(100, intval($p_rep / 5)) : 0;
@@ -8025,72 +8110,66 @@ foreach(($posts ?: []) as $idx => $p) {
     $tpl->set('{p_profile}',        $config['http_home_url'] . 'user/' . urlencode($p_user) . '/');
     $tpl->set('{p_date}',           date('d.m.Y, H:i', strtotime($p['date'])));
 
-    // 1. DLE Standard Parser (Handles bold, image, link and HTML purification)
-    $p_text = $parse->BB_Parse(stripslashes($p['text']), true);
+    // 1. DLE Native Output (comments.class.php:717 standardı)
+    // sanitizeInput() kaydederken BB_Parse + process yapıyor, bu yüzden burada parser ÇALIŞTIRILMAZ
+    $p_text = stripslashes($p['text']);
     
-    // 2. [hide] & <dlehide> Tag Parser (Runs AFTER purification to keep our boxes)
-    if (stripos($p_text, "hide") !== false) {
-        // BBCode Format
-        $bb_regex = "#(?:\[|&#91;)hide(.*?)(\]|&#93;)(.+?)(?:\[|&#91;)/hide(?:\]|&#93;)#is";
-        $p_text = preg_replace_callback($bb_regex, function ($m) use ($member_id, $user_group, $lang) {
-            $params = str_replace(['=', ' ', '&#93;', ']', '&#91;', '['], '', $m[1] ?? '');
-            $content = $m[3] ?? '';
-            $show = false;
-            if ($member_id['user_group'] == "1") $show = true;
-            elseif ($params) {
+    // 2. [hide] BBCode İşlemi (comments.class.php:735 standardı)
+    if (stripos($p_text, "[hide") !== false) {
+        $p_text = preg_replace_callback("#\[hide(.*?)\](.+?)\[/hide\]#is", function ($m) use ($member_id, $user_group, $lang) {
+            $params = str_replace(array("=", " "), "", $m[1]);
+            $content = $m[2];
+            if ($params) {
                 $groups = explode(',', $params);
-                if (in_array($member_id['user_group'], $groups)) $show = true;
+                if (in_array($member_id['user_group'], $groups) OR $member_id['user_group'] == "1") {
+                    return '<div class="df-hide-content"><b><i class="fa fa-eye"></i> GİZLİ İÇERİK:</b><br>' . $content . '</div>';
+                } else {
+                    return '<div class="df-hide-locked"><i class="fa fa-lock"></i> ' . ($lang['news_regus'] ?? 'Gizli içeriği görmek için yetkiniz yok.') . '</div>';
+                }
             } else {
-                if ($user_group[$member_id['user_group']]['allow_hide'] ?? false) $show = true;
-            }
-            if ($show) {
-                return '<div class="df-hide-content"><b><i class="fa fa-eye"></i> GİZLİ İÇERİK:</b><br>' . $content . '</div>';
-            } else {
-                return '<div class="df-hide-locked"><i class="fa fa-lock"></i> ' . ($lang['news_regus'] ?? 'Gizli içeriği görmek için yetkiniz yok.') . '</div>';
-            }
-        }, $p_text);
-
-        // HTML Format
-        $html_regex = '#<dlehide\b([^>]*)>(.*?)</dlehide>#is';
-        $p_text = preg_replace_callback($html_regex, function ($m) use ($member_id, $user_group, $lang) {
-            $attributes = $m[1];
-            $inner = $m[2];
-            $allowed_groups = '';
-            if (preg_match('/data-allowed-groups=["\']([\d,\s]+)["\']/i', $attributes, $match)) $allowed_groups = $match[1];
-            $show = false;
-            if ($member_id['user_group'] == "1") $show = true;
-            elseif ($allowed_groups) {
-                $groups = array_map('trim', explode(',', $allowed_groups));
-                if (in_array($member_id['user_group'], $groups)) $show = true;
-            } else {
-                if ($user_group[$member_id['user_group']]['allow_hide'] ?? false) $show = true;
-            }
-            if ($show) {
-                return '<div class="df-hide-content"><b><i class="fa fa-eye"></i> GİZLİ İÇERİK:</b><br>' . $inner . '</div>';
-            } else {
-                return '<div class="df-hide-locked"><i class="fa fa-lock"></i> ' . ($lang['news_regus'] ?? 'Gizli içeriği görmek için yetkiniz yok.') . '</div>';
+                if (($user_group[$member_id['user_group']]['allow_hide'] ?? false) OR $member_id['user_group'] == "1") {
+                    return '<div class="df-hide-content"><b><i class="fa fa-eye"></i> GİZLİ İÇERİK:</b><br>' . $content . '</div>';
+                } else {
+                    return '<div class="df-hide-locked"><i class="fa fa-lock"></i> ' . ($lang['news_regus'] ?? 'Gizli içeriği görmek için yetkiniz yok.') . '</div>';
+                }
             }
         }, $p_text);
     }
 
-    // 3. Nested Quote Support (Custom Rendering)
-    if(intval($Forum->getSetting('nested_quotes') ?? 1)) {
-        $_max_depth = max(1, intval($Forum->getSetting('quote_depth') ?: 4));
-        $quote_depth = 0;
-        while($quote_depth < $_max_depth && (stripos($p_text, "[quote") !== false)) {
-            $p_text = preg_replace_callback('#\[quote=([^\]]+)\](.+?)\[/quote\]#is', function($m) {
-                $author = htmlspecialchars(trim($m[1]), ENT_QUOTES, 'UTF-8');
-                return '<blockquote class="df-quote"><cite><i class="fa fa-quote-left"></i> @' . $author . '</cite><div class="df-quote-body">' . $m[2] . '</div></blockquote>';
-            }, $p_text, -1, $count1);
-            
-            $p_text = preg_replace_callback('#\[quote\](.+?)\[/quote\]#is', function($m) {
-                return '<blockquote class="df-quote"><div class="df-quote-body">' . $m[1] . '</div></blockquote>';
-            }, $p_text, -1, $count2);
-            
-            if (!$count1 && !$count2) break;
-            $quote_depth++;
+    // 3. <dlehide> HTML İşlemi (comments.class.php:760 standardı)
+    if (stripos($p_text, '<dlehide') !== false) {
+        $pattern = '#<dlehide\b([^>]*)>(.*?)</dlehide>#is';
+        while (preg_match($pattern, $p_text)) {
+            $p_text = preg_replace_callback($pattern, function ($m) use ($member_id, $user_group, $lang) {
+                $attributes = $m[1];
+                $inner = $m[2];
+                $allowed_groups_str = '';
+                if (preg_match('/data-allowed-groups=["\']([\d,\s]+)["\']/i', $attributes, $match)) {
+                    $allowed_groups_str = $match[1];
+                }
+                $is_allowed = false;
+                if ($allowed_groups_str) {
+                    $groups = array_map('trim', explode(',', $allowed_groups_str));
+                    if (in_array($member_id['user_group'], $groups) OR $member_id['user_group'] == '1') $is_allowed = true;
+                } else {
+                    if ($user_group[$member_id['user_group']]['allow_hide'] ?? false) $is_allowed = true;
+                }
+                if ($is_allowed) {
+                    return '<div class="df-hide-content"><b><i class="fa fa-eye"></i> GİZLİ İÇERİK:</b><br>' . $inner . '</div>';
+                } else {
+                    return '<div class="df-hide-locked"><i class="fa fa-lock"></i> ' . ($lang['news_regus'] ?? 'Gizli içeriği görmek için yetkiniz yok.') . '</div>';
+                }
+            }, $p_text);
         }
-        }
+    }
+    
+    // 4. DLE Native Alıntıları Modernize Et (div.quote -> df-quote)
+    if (stripos($p_text, "title_quote") !== false) {
+        $p_text = preg_replace('#<!--QuoteBegin\s+(.+?)\s+--><div class="title_quote">(.+?)</div><div class="quote">(.+?)</div><!--QuoteEnd-->(.+?)<!--QuoteEEnd-->#is', '<blockquote class="df-quote"><cite><i class="fa fa-quote-left"></i> \\2</cite><div class="df-quote-body">\\3</div></blockquote>', $p_text);
+    }
+    if (stripos($p_text, "<!--QuoteBegin-->") !== false) {
+        $p_text = preg_replace('#<!--QuoteBegin--><div class="quote"><!--QuoteEBegin-->(.+?)<!--QuoteEnd--></div><!--QuoteEEnd-->#is', '<blockquote class="df-quote"><div class="df-quote-body">\\1</div></blockquote>', $p_text);
+    }
 
 
     $tpl->set('{p_text}', $p_text);
@@ -8266,6 +8345,8 @@ if($is_logged && $Forum->canDo('moderate')) {
     $tpl->set_block("'\\[not-pinned\\](.*?)\\[/not-pinned\\]'si", !$topic['is_pinned'] ? "\\1" : "");
 } else {
     $tpl->set_block("'\\[can-moderate\\](.*?)\\[/can-moderate\\]'si", "");
+    $tpl->set_block("'\\[is-pinned\\](.*?)\\[/is-pinned\\]'si", $topic['is_pinned'] ? "\\1" : "");
+    $tpl->set_block("'\\[not-pinned\\](.*?)\\[/not-pinned\\]'si", !$topic['is_pinned'] ? "\\1" : "");
 }
 
 // =====================================================
@@ -8513,6 +8594,7 @@ $tpl->set('{total_posts}', $total_count);
 $tpl->set('{posts_list}',  $posts_html);
 $tpl->set('{pagination}',  $pagination);
 $tpl->set('{SITEURL}',     $config['http_home_url']);
+$tpl->set('{forum_js_vars}', $Forum->getJsVars());
 $tpl->compile('content');
 $tpl->clear();
 $metatags['title'] = htmlspecialchars($user_name) . ' - Forum Mesajları';
@@ -8650,6 +8732,7 @@ if($is_logged) { $tpl->set_block("'\\[is-logged\](.*?)\\[/is-logged\\]'si", "\\1
 else           { $tpl->set_block("'\\[is-logged\](.*?)\\[/is-logged\\]'si", ""); }
 $tpl->set_block("'\\[has-subforums\](.*?)\\[/has-subforums\\]'si", "");
 $tpl->set_block("'\\[has-desc\\](.*?)\\[/has-desc\\]'si", "\\1");
+$tpl->set('{forum_js_vars}', $Forum->getJsVars());
 
 $tpl->compile('content');
 $tpl->clear();
@@ -8828,6 +8911,7 @@ if(empty($slug)) {
     else           { $tpl->set_block("'\\[is-logged\](.*?)\\[/is-logged\\]'si", ""); }
     $tpl->set_block("'\\[has-subforums\](.*?)\\[/has-subforums\\]'si", "");
     $tpl->set_block("'\\[has-desc\\](.*?)\\[/has-desc\\]'si", "\\1");
+    $tpl->set('{forum_js_vars}', $Forum->getJsVars());
     $tpl->compile('content');
     $tpl->clear();
     $metatags['title'] = fl('forum_tags', 'Etiketler') . ' - ' . fl('forum_forum', 'Forum');
@@ -8909,6 +8993,7 @@ if($is_logged) { $tpl->set_block("'\\[is-logged\](.*?)\\[/is-logged\\]'si", "\\1
 else           { $tpl->set_block("'\\[is-logged\](.*?)\\[/is-logged\\]'si", ""); }
 $tpl->set_block("'\\[has-subforums\](.*?)\\[/has-subforums\\]'si", "");
 $tpl->set_block("'\\[has-desc\\](.*?)\\[/has-desc\\]'si", "\\1");
+$tpl->set('{forum_js_vars}', $Forum->getJsVars());
 $tpl->compile('content');
 $tpl->clear();
 $metatags['title'] = '#' . htmlspecialchars($slug) . ' - ' . fl('forum_forum', 'Forum');

@@ -78,6 +78,7 @@ var forum = {
     ShowLoading("");
     $.post(window.FORUM_AJAX, {
       act: 'get_post',
+      mode: 'quote',
       post_id: post_id,
       user_hash: window.FORUM_CSRF,
       csrf: window.FORUM_CSRF
