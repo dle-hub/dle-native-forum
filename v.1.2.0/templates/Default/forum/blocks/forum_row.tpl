@@ -1,4 +1,4 @@
-<div class="df-row">
+<div class="df-row [has-last-post]df-has-messages[/has-last-post] [no-last-post]df-no-messages[/no-last-post]">
     <div class="df-col-icon">
         <div class="df-forum-icon">
             <i class="fa {icon_class}"></i>

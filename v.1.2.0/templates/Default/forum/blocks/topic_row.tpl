@@ -3,13 +3,14 @@
         <div class="df-forum-icon [is-pinned]df-icon-pinned[/is-pinned] [is-locked]df-icon-locked[/is-locked]">
             [is-pinned]<i class="fa fa-thumb-tack"></i>[/is-pinned]
             [is-locked]<i class="fa fa-lock"></i>[/is-locked]
-            [is-normal]<i class="fa fa-commenting-o"></i>[/is-normal]
+            [is-normal]<i class="fa fa-commenting-o [is-new]df-icon-unread[/is-new]"></i>[/is-normal]
         </div>
     </div>
 
     <div class="df-col-main">
         <div class="df-row-title-wrap">
             {t_prefix}
+            {new_icon}
             <a href="{t_url}" class="df-row-title">{t_title}</a>
         </div>
         [has-desc]
@@ -18,20 +19,20 @@
         </div>
         [/has-desc]
         <div class="df-row-meta">
-            Açan: <b style="color: var(--df-accent);">{t_user}</b> · {t_date}
+            {lang_author} <b style="color: var(--df-accent);">{t_user}</b> · {t_date}
             [has-tags]<span class="df-row-tags" style="margin-left: 10px; font-size: 11px; opacity: 0.8;"><i class="fa fa-tags"></i> {t_tags}</span>[/has-tags]
         </div>
     </div>
 
     <div class="df-col-stats">
         <div class="df-stats-inner">
-            <div class="df-stat-count" title="Cevaplar">
+            <div class="df-stat-count" title="{lang_replies}">
                 <strong>{t_replies}</strong>
-                <span>Cevap</span>
+                <span>{lang_replies_text}</span>
             </div>
-            <div class="df-stat-count" title="Görüntülenme">
+            <div class="df-stat-count" title="{lang_views}">
                 <strong>{t_views}</strong>
-                <span>İzlenme</span>
+                <span>{lang_views_text}</span>
             </div>
         </div>
     </div>
@@ -46,5 +47,8 @@
             </div>
         </div>
         [/has-last-post]
+        [not-last-post]
+        <div class="df-no-last-post">{lang_no_posts}</div>
+        [/not-last-post]
     </div>
 </div>

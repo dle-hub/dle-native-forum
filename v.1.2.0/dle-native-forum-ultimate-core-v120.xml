@@ -937,8 +937,9 @@ if(empty($parent_cats)) {
         $forum_rows_html = '';
 
         if(!empty($forums)) {
-            $tpl->load_template('forum/blocks/forum_row.tpl');
+            unset($tpl->result['forum_row_block']);
             foreach($forums as $forum) {
+                $tpl->load_template('forum/blocks/forum_row.tpl');
                 $sub_forums = $Forum->getCats($forum['id']) ?: [];
                 $sub_cats_html = '';
 
@@ -981,9 +982,9 @@ if(empty($parent_cats)) {
                 $tpl->set('{post_count}', intval($forum['post_count']));
 
                 $tpl->compile('forum_row_block');
-                $forum_rows_html .= $tpl->result['forum_row_block'];
-                $tpl->clear();
             }
+            $forum_rows_html = $tpl->result['forum_row_block'];
+            $tpl->clear();
         } else {
             $forum_rows_html = '<div class="df-empty"><p>' . fl('forum_err_no_cats') . '</p></div>';
         }
@@ -994,6 +995,7 @@ if(empty($parent_cats)) {
         $tpl->set('{cat_forums}', $forum_rows_html);
         $tpl->compile('cat_wrap_block');
         $cats_html .= $tpl->result['cat_wrap_block'];
+        unset($tpl->result['cat_wrap_block']);
         $tpl->clear();
     }
 }
@@ -1048,8 +1050,9 @@ $sub_forums      = $Forum->getCats($cat_id) ?: [];
 $sub_forums_html = '';
 
 if(!empty($sub_forums)) {
-    $tpl->load_template('forum/blocks/forum_row.tpl');
+    unset($tpl->result['forum_row_block']);
     foreach($sub_forums as $forum) {
+        $tpl->load_template('forum/blocks/forum_row.tpl');
         $sub_sub_cats  = $Forum->getCats($forum['id']) ?: [];
         $sub_cats_html = '';
 
@@ -1093,9 +1096,9 @@ if(!empty($sub_forums)) {
         $tpl->set('{post_count}', intval($forum['post_count']));
 
         $tpl->compile('forum_row_block');
-        $sub_forums_html .= $tpl->result['forum_row_block'];
-        $tpl->clear();
     }
+    $sub_forums_html = $tpl->result['forum_row_block'];
+    $tpl->clear();
 }
 
 $topics       = $Forum->getTopics($cat_id, $page, $per_page);
@@ -1105,8 +1108,9 @@ $topics_list_html = '';
 if(empty($topics)) {
     $topics_list_html = '<div class="df-empty"><p>' . fl('forum_err_no_topics') . '</p></div>';
 } else {
-    $tpl->load_template('forum/blocks/topic_row.tpl');
+    unset($tpl->result['topic_row_block']);
     foreach($topics as $t) {
+        $tpl->load_template('forum/blocks/topic_row.tpl');
         $t_url = forum_url('forum_topic', ['newsid' => intval($t['id']), 'news_name' => $t['alt_name'], 'category' => $cat_slug]);
         $tpl->set('{t_url}', $t_url);
         $tpl->set('{t_title}', htmlspecialchars($t['title']));
@@ -1116,6 +1120,14 @@ if(empty($topics)) {
         $tpl->set('{t_replies}', number_format(intval($t['replies'])));
         $tpl->set('{t_views}', number_format(intval($t['views'])));
         $tpl->set('{t_prefix}', $Forum->formatPrefix($Forum->getPrefixById($t['prefix_id'])));
+
+        // Dil Etiketleri
+        $tpl->set('{lang_author}', fl('forum_topic_author', 'Açan:'));
+        $tpl->set('{lang_replies_text}', fl('forum_replies', 'Cevap'));
+        $tpl->set('{lang_views_text}', fl('forum_views', 'İzlenme'));
+        $tpl->set('{lang_replies}', fl('forum_replies_count', 'Cevaplar'));
+        $tpl->set('{lang_views}', fl('forum_views_count', 'Görüntülenme'));
+        $tpl->set('{lang_no_posts}', fl('forum_no_posts', 'Henüz mesaj yok'));
 
         // Tags
         $t_tags_html = '';
@@ -1138,13 +1150,35 @@ if(empty($topics)) {
             $tpl->set('{last_avatar}', $user_avatar ?: $noavatar);
             $tpl->set('{last_url}', $t_url . '#post-' . $t['last_post_id']);
             $tpl->set_block("'\\[has-last-post\\](.*?)\\[/has-last-post\\]'si", "\\1");
+            $tpl->set_block("'\\[not-last-post\\](.*?)\\[/not-last-post\\]'si", "");
         } else {
             $tpl->set_block("'\\[has-last-post\\](.*?)\\[/has-last-post\\]'si", "");
+            $tpl->set_block("'\\[not-last-post\\](.*?)\\[/not-last-post\\]'si", "\\1");
         }
 
         $tpl->set_block("'\\[is-pinned\\](.*?)\\[/is-pinned\\]'si", $t['is_pinned'] ? "\\1" : "");
         $tpl->set_block("'\\[is-locked\\](.*?)\\[/is-locked\\]'si", $t['is_locked'] ? "\\1" : "");
         $tpl->set_block("'\\[is-normal\\](.*?)\\[/is-normal\\]'si", (!$t['is_pinned'] && !$t['is_locked']) ? "\\1" : "");
+
+        // Okunma durumu
+        $last_post_time = !empty($t['last_post_date']) ? strtotime($t['last_post_date']) : strtotime($t['date']);
+        if($is_logged) {
+            $is_new = $last_post_time > intval($member_id['lastdate']);
+        } else {
+            $is_new = $last_post_time > (time() - 86400);
+        }
+
+        if($is_new) {
+            $tpl->set('{topic_class}', 'df-topic-unread');
+            $tpl->set('{new_icon}', '<span class="df-new-badge">' . fl('forum_new', 'YENİ') . '</span>');
+            $tpl->set_block("'\\[is-new\\](.*?)\\[/is-new\\]'si", "\\1");
+            $tpl->set_block("'\\[not-new\\](.*?)\\[/not-new\\]'si", "");
+        } else {
+            $tpl->set('{topic_class}', 'df-topic-read');
+            $tpl->set('{new_icon}', '');
+            $tpl->set_block("'\\[is-new\\](.*?)\\[/is-new\\]'si", "");
+            $tpl->set_block("'\\[not-new\\](.*?)\\[/not-new\\]'si", "\\1");
+        }
 
         if(!empty($t['description'])) { $tpl->set_block("'\\[has-desc\\](.*?)\\[/has-desc\\]'si", "\\1"); }
         else                          { $tpl->set_block("'\\[has-desc\\](.*?)\\[/has-desc\\]'si", ""); }
@@ -1244,9 +1278,8 @@ if($filter_date_to > 0)       $extra_where[] = "UNIX_TIMESTAMP(t.date) <= '{$fil
 if(empty($topics)) {
     $topics_list_html = '<div class="df-empty"><div class="df-empty-icon"><i class="fa fa-search"></i></div>' . fl('forum_search_no_results') . '</div>';
 } else {
-    $tpl->load_template('forum/blocks/topic_row.tpl');
-
     foreach($topics as $t) {
+        $tpl->load_template('forum/blocks/topic_row.tpl');
         $t_id      = intval($t['id']);
         $t_url     = forum_url('forum_topic', ['newsid' => $t_id, 'news_name' => $t['alt_name'], 'category' => $t['cat_slug']]);
         $t_title   = htmlspecialchars($t['title'], ENT_QUOTES, 'UTF-8');
@@ -1273,7 +1306,6 @@ if(empty($topics)) {
             $status_icon = '<i class="fa fa-lock" style="color:var(--df-danger)"></i>';
         }
 
-        $tpl->set('{topic_class}',  '');
         $tpl->set('{t_url}',        $t_url);
         $tpl->set('{t_title}',      htmlspecialchars($t['title']));
         $tpl->set('{t_desc}',       htmlspecialchars($t['description'] ?: '', ENT_QUOTES, 'UTF-8'));
@@ -1311,7 +1343,19 @@ if(empty($topics)) {
         $tpl->set_block("'\\[is-pinned\\](.*?)\\[/is-pinned\\]'si", (!empty($t['is_pinned'])) ? "\\1" : "");
         $tpl->set_block("'\\[is-locked\\](.*?)\\[/is-locked\\]'si", (!empty($t['is_locked'])) ? "\\1" : "");
         $tpl->set_block("'\\[is-normal\\](.*?)\\[/is-normal\\]'si", (empty($t['is_pinned']) && empty($t['is_locked'])) ? "\\1" : "");
-        $tpl->set('{last_date}',   (strtotime($t['last_post_date'] ?: $t['date']) > 0) ? date('d.m.Y H:i', strtotime($t['last_post_date'] ?: $t['date'])) : '-');
+        $lpt_s = !empty($t['last_post_date']) ? strtotime($t['last_post_date']) : strtotime($t['date']);
+        $is_new_s = $is_logged ? ($lpt_s > intval($member_id['lastdate'])) : ($lpt_s > (time() - 86400));
+        if($is_new_s) {
+            $tpl->set('{topic_class}', 'df-topic-unread');
+            $tpl->set('{new_icon}', '<span class="df-new-badge">' . fl('forum_new', 'YENİ') . '</span>');
+            $tpl->set_block("'\\[is-new\\](.*?)\\[/is-new\\]'si", "\\1");
+            $tpl->set_block("'\\[not-new\\](.*?)\\[/not-new\\]'si", "");
+        } else {
+            $tpl->set('{topic_class}', 'df-topic-read');
+            $tpl->set('{new_icon}', '');
+            $tpl->set_block("'\\[is-new\\](.*?)\\[/is-new\\]'si", "");
+            $tpl->set_block("'\\[not-new\\](.*?)\\[/not-new\\]'si", "\\1");
+        }
         
         $user_avatar = !empty($t['last_user_avatar']) ? $t['last_user_avatar'] : '';
         if ($user_avatar && strpos($user_avatar, 'http') !== 0) {
@@ -1341,8 +1385,8 @@ if(empty($topics)) {
         }
 
         $tpl->compile('topic_row_block');
-        $topics_list_html .= $tpl->result['topic_row_block'];
     }
+    $topics_list_html = $tpl->result['topic_row_block'];
 }
 
  $base_url = forum_fix_url(forum_url('forum_search'), 'q=' . urlencode($q));
@@ -4177,9 +4221,9 @@ if (isset($_POST["save_action"])) {
     // ---- KATEGORİ KAYDET ----
     if ($save == "save_cat") {
         $cat_id = intval($_POST["cat_id"]);
-        $name = $db->safesql($Forum->sanitizeInput(trim($_POST["name"])));
+        $name = $db->safesql(strip_tags(trim($_POST["name"])));
         $alt = $db->safesql(totranslit(trim($_POST["name"]), true, false));
-        $desc = $db->safesql($Forum->sanitizeInput(trim($_POST["description"])));
+        $desc = $db->safesql(strip_tags(trim($_POST["description"])));
         $icon = $db->safesql(trim($_POST["icon"]));
         $posi = intval($_POST["posi"]);
         $pid = intval($_POST["parent_id"]);
@@ -4351,11 +4395,11 @@ if (isset($_POST["save_action"])) {
     // ---- RÜTBE KAYDET ----
     if ($save == "save_rank") {
         $rank_id = intval($_POST["rank_id"]);
-        $title = $db->safesql($Forum->sanitizeInput(trim($_POST["title"])));
+        $title = $db->safesql(strip_tags(trim($_POST["title"])));
         $points = intval($_POST["points"]);
         $color = $db->safesql(trim($_POST["color"]));
         $icon = $db->safesql(trim($_POST["icon"]));
-        $badge_text = $db->safesql($Forum->sanitizeInput(trim($_POST["badge_text"])));
+        $badge_text = $db->safesql(strip_tags(trim($_POST["badge_text"])));
         $for_group = intval($_POST["for_group"] ?? 0);
 
         if ($rank_id > 0) {
@@ -4460,7 +4504,7 @@ if (isset($_POST["save_action"])) {
     // ---- IP BAN EKLE ----
     if ($save == "add_ban") {
         $ban_ip      = $db->safesql(trim($_POST["ban_ip"] ?? ""));
-        $ban_reason  = $db->safesql($Forum->sanitizeInput(trim($_POST["ban_reason"] ?? "")));
+        $ban_reason  = $db->safesql(strip_tags(trim($_POST["ban_reason"] ?? "")));
         $ban_contact = $db->safesql(trim($_POST["ban_contact"] ?? ""));
         $ban_user_id = intval($_POST["ban_user_id"] ?? 0);
         $ban_days    = intval($_POST["ban_days"] ?? 0);
@@ -4886,6 +4930,36 @@ if ($action == "edit_topic") {
     $js_array[] = "public/fileuploader/plupload/i18n/{$lang["language_code"]}.js";
 }
 
+// ----------------------------------------------------------------
+// AJAX: Kategori sıralama - echoheader'dan önce yakala
+// ----------------------------------------------------------------
+if ($action === 'save_cat_order_ajax') {
+    if (!isset($_POST['user_hash']) || !hash_equals((string)$dle_login_hash, (string)$_POST['user_hash'])) {
+        die("Hacking attempt!");
+    }
+    $order = json_decode($_POST["order"] ?? '', true);
+    if (is_array($order)) {
+        $posi = 0;
+        $updateOrder = function ($items, $parent_id = 0) use (&$updateOrder, &$posi, $db) {
+            foreach ($items as $item) {
+                $id = intval($item["id"]);
+                if ($id == $parent_id) continue;
+                $db->query("UPDATE " . PREFIX . "_forum_cats SET posi='$posi', parent_id='$parent_id' WHERE id='$id'");
+                $posi++;
+                if (!empty($item["children"])) {
+                    $updateOrder($item["children"], $id);
+                }
+            }
+        };
+        $updateOrder($order, 0);
+        clear_cache();
+        echo "ok";
+    } else {
+        echo "error";
+    }
+    exit();
+}
+
 echoheader(
     "<i class='fa fa-comments-o'></i> " .
         fl("forum_admin_title", "DLE Native Forum"),
@@ -5172,6 +5246,7 @@ HTML;
         $L_ORDER_FAIL = fl("forum_order_fail");
         $L_ORDER_OK = fl("forum_order_ok");
         $L_SUCCESS = fl("forum_success");
+        $admin_ajax_url = 'index.php?mod=forum&action=save_cat_order_ajax';
         echo <<<JS
         <script>
             jQuery(function($){
@@ -5201,7 +5276,7 @@ HTML;
                 $('#nestable').nestable().on('change',function(){
                     var order = window.JSON.stringify($('.dd').nestable('serialize'));
                     ShowLoading('');
-                    $.post('index.php?mod=forum&action=save_cat_order_ajax', {
+                    $.post('{$admin_ajax_url}', {
                         order: order,
                         user_hash: '{$dle_login_hash_js}'
                     }, function(data){
@@ -5209,7 +5284,7 @@ HTML;
                         if (data != 'ok') {
                             DLEPush.error('{$L_ORDER_FAIL}');
                         } else {
-                            DLEPush.info('{$L_ORDER_OK}', '{$L_SUCCESS}');
+                            DLEPush.warning('{$L_ORDER_OK}', '{$L_SUCCESS}');
                         }
                     });
                 });
@@ -6312,14 +6387,17 @@ HTML;
         );
         showRow(
             fl("forum_set_topics_per_page"),
-            fl("forum_set_topics_per_page_desc"),
+            fl(
+                "forum_set_topics_per_page_desc",
+                "Sayfa basina gosterilecek mesaj sayisi",
+            ),
             '<input type="text" class="form-control" style="max-width:10.42em; text-align: center;" name="topics_per_page" value="' .
                 $v("topics_per_page", "25") .
                 '">',
         );
         showRow(
             fl("forum_set_guest_view"),
-            fl("forum_set_guest_view_desc"),
+            fl("forum_set_guest_view_desc", "Misafirler forumu gorebilsin mi?"),
             makeCheckBox("allow_guests_view", $v("allow_guests_view", "1")),
         );
         showRow(
@@ -6329,14 +6407,14 @@ HTML;
         );
         showRow(
             fl("forum_set_min_post"),
-            fl("forum_set_min_post_desc"),
+            fl("forum_set_min_post_desc", "Minimum mesaj karakter sayisi"),
             '<input type="text" class="form-control" style="max-width:10.42em; text-align: center;" name="min_post_length" value="' .
                 $v("min_post_length", "10") .
                 '">',
         );
         showRow(
             fl("forum_set_max_post"),
-            fl("forum_set_max_post_desc"),
+            fl("forum_set_max_post_desc", "Maksimum mesaj karakter sayisi"),
             '<input type="text" class="form-control" style="max-width:10.42em; text-align: center;" name="max_post_length" value="' .
                 $v("max_post_length", "10000") .
                 '">',
@@ -8666,15 +8744,14 @@ $total    = $Forum->countUnansweredTopics();
 $topics   = $Forum->getUnansweredTopics($page, $per_page);
 $noavatar = rtrim($config['http_home_url'], '/') . '/templates/' . $config['skin'] . '/dleimages/noavatar.png';
 
-$tpl->load_template('forum/blocks/topic_row.tpl');
 $list_html = '';
 
 if($topics) {
     foreach($topics as $t) {
+        $tpl->load_template('forum/blocks/topic_row.tpl');
         $t_id  = intval($t['id']);
         $t_url = forum_url('forum_topic', ['newsid' => $t_id, 'news_name' => $t['alt_name'] ?? '', 'category' => $t['cat_slug'] ?? '']);
 
-        $tpl->set('{topic_class}', '');
         $tpl->set('{t_url}',       $t_url);
         $tpl->set('{t_title}',     htmlspecialchars($t['title'], ENT_QUOTES, 'UTF-8'));
         $tpl->set('{t_desc}',      htmlspecialchars($t['description'] ?? '', ENT_QUOTES, 'UTF-8'));
@@ -8698,18 +8775,19 @@ if($topics) {
         $tpl->set_block("'\\[is-pinned\\](.*?)\\[/is-pinned\\]'si", "");
         $tpl->set_block("'\\[is-locked\\](.*?)\\[/is-locked\\]'si", "");
         $tpl->set_block("'\\[is-normal\\](.*?)\\[/is-normal\\]'si", "\\1");
-        if(!empty($t['description'])) { $tpl->set_block("'\\[has-desc\\](.*?)\\[/has-desc\\]'si", "\\1"); }
-        else                          { $tpl->set_block("'\\[has-desc\\](.*?)\\[/has-desc\\]'si", ""); }
-
-        $tpl->compile('topic_row_block');
-    }
-    $list_html = $tpl->result['topic_row_block'];
-} else {
-    $tpl->load_template('forum/blocks/empty.tpl');
-    $tpl->set('{empty_msg}', fl('forum_no_unanswered', 'Yanıtlanmamış konu yok.'));
-    $tpl->compile('empty_block');
-    $list_html = $tpl->result['empty_block'];
-}
+        $lpt_u = strtotime($t['date']);
+        $is_new_u = $is_logged ? ($lpt_u > intval($member_id['lastdate'])) : ($lpt_u > (time() - 86400));
+        if($is_new_u) {
+            $tpl->set('{topic_class}', 'df-topic-unread');
+            $tpl->set('{new_icon}', '<span class="df-new-badge">' . fl('forum_new', 'YENİ') . '</span>');
+            $tpl->set_block("'\\[is-new\\](.*?)\\[/is-new\\]'si", "\\1");
+            $tpl->set_block("'\\[not-new\\](.*?)\\[/not-new\\]'si", "");
+        } else {
+            $tpl->set('{topic_class}', 'df-topic-read');
+            $tpl->set('{new_icon}', '');
+            $tpl->set_block("'\\[is-new\\](.*?)\\[/is-new\\]'si", "");
+            $tpl->set_block("'\\[not-new\\](.*?)\\[/not-new\\]'si", "\\1");
+        }
 
 $pagination = $Forum->pagination($total, $per_page, $page, forum_url('forum_main') . '?action=unanswered');
 
@@ -8771,17 +8849,16 @@ $day_filter_wrap = $tpl->result['day_filter_wrap_block'];
 // ============================================================
 // KONU DÖNGÜSÜ
 // ============================================================
-$tpl->load_template('forum/blocks/topic_row.tpl');
 $list_html = '';
 
 if($topics) {
     foreach($topics as $t) {
+        $tpl->load_template('forum/blocks/topic_row.tpl');
         $t_id  = intval($t['id']);
         $t_url = forum_url('forum_topic', ['newsid' => $t_id, 'news_name' => $t['alt_name'] ?? '', 'category' => $t['cat_slug'] ?? '']);
 
         $is_unread = $is_logged ? $Forum->isUnread($t_id, intval($t['last_post_id'] ?? 0)) : false;
 
-        $tpl->set('{topic_class}', '');
         $tpl->set('{t_url}',       $t_url);
         $tpl->set('{t_title}',     htmlspecialchars($t['title'], ENT_QUOTES, 'UTF-8'));
         $tpl->set('{t_desc}',      htmlspecialchars($t['description'] ?? '', ENT_QUOTES, 'UTF-8'));
@@ -8820,6 +8897,10 @@ if($topics) {
     $list_html = $tpl->result['topic_row_block'];
 } else {
     $tpl->load_template('forum/blocks/empty.tpl');
+    $tpl->set('{empty_msg}', fl('forum_no_unanswered', 'Yanıtlanmamış konu yok.'));
+    $tpl->compile('empty_block');
+    $list_html = $tpl->result['empty_block'];
+}
     $tpl->set('{empty_msg}', fl('forum_no_active', 'Bu dönemde aktif konu yok.'));
     $tpl->compile('empty_block');
     $list_html = $tpl->result['empty_block'];
@@ -8922,17 +9003,16 @@ $page     = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $per_page = 25;
 $topics   = $Forum->getTopicsByTag($slug, $page, $per_page) ?: [];
 
-$tpl->load_template('forum/blocks/topic_row.tpl');
 $list_html = '';
 
 if(!empty($topics)) {
     foreach($topics as $t) {
+        $tpl->load_template('forum/blocks/topic_row.tpl');
         $t_id  = intval($t['id']);
         $t_url = forum_url('forum_topic', ['newsid' => $t_id, 'news_name' => $t['alt_name'] ?? '', 'category' => $t['cat_slug'] ?? '']);
 
         $last_date_raw = $t['last_post_date'] ?? $t['date'];
 
-        $tpl->set('{topic_class}', '');
         $tpl->set('{t_url}',       $t_url);
         $tpl->set('{t_title}',     htmlspecialchars($t['title'], ENT_QUOTES, 'UTF-8'));
         $tpl->set('{t_desc}',      htmlspecialchars($t['description'] ?? '', ENT_QUOTES, 'UTF-8'));
@@ -8962,12 +9042,25 @@ if(!empty($topics)) {
         $tpl->set_block("'\\[is-pinned\\](.*?)\\[/is-pinned\\]'si", (!empty($t['is_pinned'])) ? "\\1" : "");
         $tpl->set_block("'\\[is-locked\\](.*?)\\[/is-locked\\]'si", (!empty($t['is_locked'])) ? "\\1" : "");
         $tpl->set_block("'\\[is-normal\\](.*?)\\[/is-normal\\]'si", (empty($t['is_pinned']) && empty($t['is_locked'])) ? "\\1" : "");
+        $lpt_tg = !empty($t['last_post_date']) ? strtotime($t['last_post_date']) : strtotime($t['date']);
+        $is_new_tg = $is_logged ? ($lpt_tg > intval($member_id['lastdate'])) : ($lpt_tg > (time() - 86400));
+        if($is_new_tg) {
+            $tpl->set('{topic_class}', 'df-topic-unread');
+            $tpl->set('{new_icon}', '<span class="df-new-badge">' . fl('forum_new', 'YENİ') . '</span>');
+            $tpl->set_block("'\\[is-new\\](.*?)\\[/is-new\\]'si", "\\1");
+            $tpl->set_block("'\\[not-new\\](.*?)\\[/not-new\\]'si", "");
+        } else {
+            $tpl->set('{topic_class}', 'df-topic-read');
+            $tpl->set('{new_icon}', '');
+            $tpl->set_block("'\\[is-new\\](.*?)\\[/is-new\\]'si", "");
+            $tpl->set_block("'\\[not-new\\](.*?)\\[/not-new\\]'si", "\\1");
+        }
         if(!empty($t['description'])) { $tpl->set_block("'\\[has-desc\\](.*?)\\[/has-desc\\]'si", "\\1"); }
         else                          { $tpl->set_block("'\\[has-desc\\](.*?)\\[/has-desc\\]'si", ""); }
 
         $tpl->compile('topic_row_block');
-        $list_html .= $tpl->result['topic_row_block'];
     }
+    $list_html = $tpl->result['topic_row_block'];
 } else {
     $tpl->load_template('forum/blocks/empty.tpl');
     $tpl->set('{empty_msg}', fl('forum_no_topics_tag', 'Bu etiketle konu bulunamadı.'));

@@ -475,3 +475,111 @@ body {
     .df-pagination { justify-content: center; }
     .df-page-item, .df-page-prev, .df-page-next { min-width: 34px; height: 34px; padding: 0 10px; }
 }
+
+/* Boş Forumlar: İkonu sönükleştir, gradyanı kaldır, hafiflet */
+.df-no-messages .df-forum-icon {
+    background: #f8fafc !important; /* Çok açık gri, neredeyse beyaz */
+    color: #cbd5e1 !important; /* Solgun ikon rengi */
+    box-shadow: none !important;
+    opacity: 0.7;
+}
+
+/* Mesaj Olan Forumlar: İkonu parlat, gradyanı belirginleştir */
+.df-has-messages .df-forum-icon {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+    color: var(--df-accent) !important;
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.2);
+    opacity: 1;
+}
+
+/* Okunmamış mesaj varsa (Opsiyonel: Daha da parlatmak istersen) */
+.df-has-messages {
+    border-left: 3px solid var(--df-accent); /* Mesaj olanlara sol şerit atarak canlılık kat */
+}
+
+.df-no-messages {
+    border-left: 3px solid transparent;
+}
+
+
+/* ================================================
+   DLE Native Forum - Konu Okunma Durumu Stilleri
+   ================================================ */
+
+/* --- Okunmamış Konu Satırı --- */
+.df-topic-unread {
+    border-left: 3px solid var(--df-orange);
+    background: rgba(249, 115, 22, 0.03);
+}
+
+/* --- Okunmamış Konu Başlığı --- */
+.df-topic-unread .df-row-title {
+    font-weight: 700;
+    color: var(--df-navy);
+}
+
+/* --- Okunmuş Konu Başlığı --- */
+.df-topic-read .df-row-title {
+    font-weight: 400;
+    color: var(--df-text-muted);
+}
+
+/* --- YENİ Rozeti --- */
+.df-new-badge {
+    display: inline-block;
+    background: var(--df-orange);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 6px;
+    text-transform: uppercase;
+    vertical-align: middle;
+    letter-spacing: 0.5px;
+}
+
+/* --- Okunmamış İkon Rengi (fa-commenting-o) --- */
+.df-icon-unread {
+    color: var(--df-orange) !important;
+}
+
+/* --- Okunmuş İkon Rengi --- */
+.df-topic-read .df-forum-icon i {
+    color: var(--df-text-muted);
+    opacity: 0.5;
+}
+
+/* --- Pinli İkon --- */
+.df-icon-pinned i {
+    color: var(--df-accent) !important;
+}
+
+/* --- Kilitli İkon --- */
+.df-icon-locked i {
+    color: #ef4444 !important;
+}
+
+
+/* Forum Mesajlarındaki Listeleri Kurtarma Operasyonu */
+.df-post-content ul, 
+.df-topic-desc ul {
+    list-style: disc !important; /* Noktaları geri getir */
+    margin-left: 30px !important; /* Sağa kaydır ki iç içe girmesin */
+    padding-left: 0 !important;
+    display: block !important;
+}
+
+.df-post-content ol, 
+.df-topic-desc ol {
+    list-style: decimal !important; /* Numaralı listeyi geri getir */
+    margin-left: 30px !important;
+    padding-left: 0 !important;
+    display: block !important;
+}
+
+.df-post-content li, 
+.df-topic-desc li {
+    display: list-item !important; /* Her maddeyi bir liste öğesi yap */
+    margin-bottom: 5px;
+}
